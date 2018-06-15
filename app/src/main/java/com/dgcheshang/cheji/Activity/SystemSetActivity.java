@@ -32,9 +32,14 @@ import com.dgcheshang.cheji.R;
 import com.dgcheshang.cheji.Tools.Speaking;
 import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.tools.fingerprint.BaseInitTask;
+import com.dgcheshang.cheji.netty.util.RlsbUtil;
 import com.dgcheshang.cheji.netty.util.ZdUtil;
 import com.rscja.deviceapi.Fingerprint;
+import com.rscja.deviceapi.RFIDWithISO14443B;
 import com.rscja.deviceapi.exception.ConfigurationException;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  *系统设置
@@ -54,6 +59,7 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
     SharedPreferences zdcssp;
     SharedPreferences.Editor zdcs_edit;
     TextView tv_sb_tishi;
+    String fileurl="/sdcard/jlypic/";//教练员跟学员图片文件夹路径
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -309,6 +315,8 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
             if (NettyConf.debug) {
                 Log.e("TAG", "清除身份信息数量：" + num);
             }
+            //清除教练跟学员原始照片文件夹
+            boolean delete = RlsbUtil.delete(fileurl);
             Speaking.in("清除成功");
         }
     }
@@ -328,11 +336,27 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
             if (NettyConf.debug) {
                 Log.e("TAG", "清除身份信息数量：" + num);
             }
+            //删除原始照片
+            boolean delete = RlsbUtil.delete(fileurl + idcard + ".jpg");
+            Log.e("TAG","删除照片结果="+delete);
             if (num > 0) {
+
                 Speaking.in("清除成功");
+
             } else {
                 Speaking.in("未找到缓存");
             }
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            RFIDWithISO14443B.getInstance().free();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }

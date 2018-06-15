@@ -36,6 +36,8 @@ import com.dgcheshang.cheji.netty.timer.CardTimer;
 import com.dgcheshang.cheji.netty.timer.LoadingTimer;
 import com.dgcheshang.cheji.netty.util.GatewayService;
 import com.dgcheshang.cheji.netty.util.ZdUtil;
+import com.dgcheshang.cheji.nettygps.conf.Params;
+import com.dgcheshang.cheji.nettygps.util.GpsUtil;
 import com.rscja.customservices.ICustomServices;
 import com.rscja.deviceapi.RFIDWithISO14443A;
 
@@ -57,6 +59,7 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
     public static boolean isGPS=false;//判断GPS是否启动
     public final int SETTING=0;
     EditText edt_sheng,edt_shi,edt_carnumb,edt_phonenumb,edt_duankou,edt_ip;
+    EditText edt_gps_ip,edt_gps_duankou;
     String[] carcolor=new String[]{"请选择","蓝色","黄色","黑色","白色","绿色","其他"};//车牌颜色：1:蓝色 2:黄色 3:黑色 4:白色 5:绿色 9:其他
 
     String[] carnumber=new String[]{"粤","京","津","冀","晋","蒙","辽","吉","黑","沪","苏","浙","皖","闽","赣","鲁","豫","鄂","湘","桂","琼","渝","川","贵","云","藏","陕","甘","青","宁","新"};
@@ -64,11 +67,10 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
     int jianchen=0;//省份简称
     String uid;
     TextView tv_show_uid;
-    View layout_showuid;
     View layout_admin;
     Spinner sp_carcolor,sp_carnumber;
     RFIDWithISO14443A mRFID;
-    Button bt_sure,bt_cancel,bt_have_set,bt_init;
+    Button bt_sure,bt_cancel,bt_have_set,bt_init,bt_gps_sure,bt_gps_cancel;
     SharedPreferences.Editor editor;
     private Dialog loading;
     LoadingTimer loadingTimer;
@@ -91,18 +93,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                 }
                 //刷卡成功后返回uid
                 String adminuid = msg.getData().getString("adminuid");
-                layout_showuid.setVisibility(View.VISIBLE);
-                tv_show_uid.setText(adminuid);
-                edt_ip.setInputType(InputType.TYPE_CLASS_TEXT);
-                edt_duankou.setInputType(InputType.TYPE_CLASS_TEXT);
-                edt_sheng.setInputType(InputType.TYPE_CLASS_TEXT);
-                edt_shi.setInputType(InputType.TYPE_CLASS_TEXT);
-                edt_carnumb.setInputType(InputType.TYPE_CLASS_TEXT);
-                edt_phonenumb.setInputType(InputType.TYPE_CLASS_TEXT);
-                sp_carcolor.setClickable(true);
-                sp_carnumber.setClickable(true);
-                sp_carnumber.setEnabled(true);
-                sp_carcolor.setEnabled(true);
+                tv_show_uid.setVisibility(View.VISIBLE);
+                tv_show_uid.setText("UID:"+adminuid);
                 adminLogin(adminuid);
 
             }else if(msg.arg1==7){
@@ -121,6 +113,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                     LoadingDialogUtils.closeDialog(loading);
                     edt_ip.setInputType(InputType.TYPE_CLASS_TEXT);
                     edt_duankou.setInputType(InputType.TYPE_CLASS_TEXT);
+                    edt_gps_ip.setInputType(InputType.TYPE_CLASS_TEXT);
+                    edt_gps_duankou.setInputType(InputType.TYPE_CLASS_TEXT);
                     edt_sheng.setInputType(InputType.TYPE_CLASS_TEXT);
                     edt_shi.setInputType(InputType.TYPE_CLASS_TEXT);
                     edt_carnumb.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -156,9 +150,26 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                 String s=cp.substring(1);//去掉第一个
                 String s1=s.substring(0,s.length()-1);
                 edt_carnumb.setText(s1);
+
+                if(StringUtils.isNotEmpty(deviceInfo.getModel())){
+                    NettyConf.model=deviceInfo.getModel();
+                }
+                if(StringUtils.isNotEmpty(deviceInfo.getTermno())){
+                    NettyConf.termno=deviceInfo.getTermno();
+                }
+
+                if(StringUtils.isNotEmpty(deviceInfo.getSyid())){
+                    NettyConf.shengID=deviceInfo.getSyid();
+                    edt_sheng.setText(deviceInfo.getSyid());
+                }
+                if(StringUtils.isNotEmpty(deviceInfo.getSxyid())){
+                    NettyConf.shiID=deviceInfo.getSxyid();
+                    edt_shi.setText(deviceInfo.getSxyid());
+                }
             }
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -189,22 +200,25 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
         uid = uidsp.getString("uid", NettyConf.uid);
 
         View layout_back = findViewById(R.id.layout_back);//返回按钮
-        layout_showuid = findViewById(R.id.layout_showuid);//uid展示布局
         tv_show_uid = (TextView) findViewById(R.id.tv_show_uid);//uid显示
         layout_admin = findViewById(R.id.layout_admin);//管理员布局显示
         bt_sure = (Button) findViewById(R.id.bt_sure);//确定按钮
         bt_cancel = (Button) findViewById(R.id.bt_cancel);//注销按钮
         bt_init = (Button) findViewById(R.id.bt_init);//初始化按钮
+        bt_gps_sure = (Button) findViewById(R.id.bt_gps_sure);//gps连接按钮
+        bt_gps_cancel = (Button) findViewById(R.id.bt_gps_cancel);//gps注销按钮
         bt_have_set = (Button) findViewById(R.id.bt_have_set);//获取设置权限
         edt_ip = (EditText) findViewById(R.id.edt_ip);//IP
         edt_duankou = (EditText) findViewById(R.id.edt_duankou);//端口
+        edt_gps_ip = (EditText) findViewById(R.id.edt_gps_ip);//gps_ip
+        edt_gps_duankou = (EditText) findViewById(R.id.edt_gps_duankou);//gps端口
         edt_sheng = (EditText) findViewById(R.id.edt_sheng);//省域
         edt_shi = (EditText) findViewById(R.id.edt_shi);//市域
         edt_carnumb = (EditText) findViewById(R.id.edt_carnumb);//车牌号
         edt_phonenumb = (EditText) findViewById(R.id.edt_phonenumb);//手机号
         sp_carcolor = (Spinner) findViewById(R.id.Spinner_carcolor);//车牌颜色
         sp_carnumber = (Spinner) findViewById(R.id.spinner_carnumber);//车牌省简称
-        layout_showuid.setVisibility(View.GONE);
+        tv_show_uid.setVisibility(View.INVISIBLE);
         layout_admin.setVisibility(View.INVISIBLE);
         edt_ip.setInputType(InputType.TYPE_NULL);
         edt_duankou.setInputType(InputType.TYPE_NULL);
@@ -212,6 +226,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
         edt_shi.setInputType(InputType.TYPE_NULL);
         edt_carnumb.setInputType(InputType.TYPE_NULL);
         edt_phonenumb.setInputType(InputType.TYPE_NULL);
+        edt_gps_ip.setInputType(InputType.TYPE_NULL);
+        edt_gps_duankou.setInputType(InputType.TYPE_NULL);
         ArrayAdapter<String> numAdapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, carnumber);
         numAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sp_carnumber.setAdapter(numAdapter);
@@ -231,6 +247,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
             edt_ip.setText(NettyConf.host);
             edt_duankou.setText(String.valueOf(NettyConf.port));
         }
+        edt_gps_ip.setText(Params.gpshost);
+        edt_gps_duankou.setText(Params.gpsport+"");
         edt_sheng.setText(NettyConf.shengID);
         edt_shi.setText(NettyConf.shiID);
         edt_phonenumb.setText(NettyConf.mobile);
@@ -293,6 +311,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
         bt_cancel.setOnClickListener(this);
         bt_have_set.setOnClickListener(this);
         bt_init.setOnClickListener(this);
+        bt_gps_cancel.setOnClickListener(this);
+        bt_gps_sure.setOnClickListener(this);
     }
 
     /**
@@ -309,6 +329,8 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                 String host = edt_ip.getText().toString().trim();
                 String duankou = edt_duankou.getText().toString().trim();
                 String phonenumb = edt_phonenumb.getText().toString().trim();
+                String gps_ip = edt_gps_ip.getText().toString().trim();
+                String gps_duankou = edt_gps_duankou.getText().toString().trim();
                 if(carnumb.equals("")||sheng.equals("")||shi.equals("")||host.equals("")||duankou.equals("")||phonenumb.equals("")||color==0){
                     Toast.makeText(context,"信息未填写完整",Toast.LENGTH_SHORT).show();
                 }else {
@@ -323,6 +345,13 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                     edit.putString("0048",phonenumb);//电话号码
                     edit.putString("0013",host);//ip
                     edit.putString("0018",duankou);//ip
+
+                    edit.putString("model",NettyConf.model);
+                    edit.putString("termno",NettyConf.termno);
+                    edit.putString("0081",NettyConf.shengID);
+                    edit.putString("0082",NettyConf.shiID);
+                    edit.putString("0017",gps_ip);
+                    edit.putString("0019",gps_duankou);
                     edit.commit();
 
                     NettyConf.cp=jian+carnumb+"学";
@@ -351,7 +380,7 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
             case R.id.bt_cancel://注销
 
                 if(NettyConf.xystate==0&&NettyConf.jlstate==0){//判断是否学员跟教练员都登出
-                    showCancelDialog();
+                    showCancelDialog("1","您确定要注销连接吗？");
                 }else {
                     Toast.makeText(context,"当前还有未登出状态，请先登出",Toast.LENGTH_SHORT).show();
                 }
@@ -363,6 +392,20 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
 
             case R.id.bt_init://获取下拉参数
                 ZdUtil.getDeviceInfo();
+                break;
+
+            case R.id.bt_gps_sure://开启gps连接
+                Object o=GatewayService.getGatewayChannel("sptChannel");
+                if(o!=null){
+                    ChannelHandlerContext clientChannel = (ChannelHandlerContext) o;
+                    clientChannel.close();
+                }else {
+                    GpsUtil.conServer();
+                }
+                break;
+
+            case R.id.bt_gps_cancel://注销gps连接
+                showCancelDialog("2","您确定要注销GPS连接吗？");
                 break;
         }
     }
@@ -501,16 +544,22 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
     /**
      * 注销dialog
      * */
-    private void showCancelDialog(){
+    private void showCancelDialog(final String type, String msg){
         final AlertDialog.Builder normalDialog = new AlertDialog.Builder(context);
         normalDialog.setTitle("提示");
-        normalDialog.setMessage("您确定要注销连接吗？");
+        normalDialog.setMessage(msg);
         normalDialog.setPositiveButton("确定",
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        ZdUtil.sendZdzx();
+                        if(type.equals("1")){
+                            ZdUtil.sendZdzx();
+                        }else {
+                            //注销gps
+                            GpsUtil.sendZdzx();
+                        }
+
                     }
                 });
         normalDialog.setNegativeButton("取消",
@@ -563,6 +612,18 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
             if(uid.contains(adminuid)){
                 layout_admin.setVisibility(View.VISIBLE);
                 NettyConf.background=1;//刷管理员卡，改变后台监听状态
+                edt_ip.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_duankou.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_gps_duankou.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_gps_ip.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_sheng.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_shi.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_carnumb.setInputType(InputType.TYPE_CLASS_TEXT);
+                edt_phonenumb.setInputType(InputType.TYPE_CLASS_TEXT);
+                sp_carcolor.setClickable(true);
+                sp_carnumber.setClickable(true);
+                sp_carnumber.setEnabled(true);
+                sp_carcolor.setEnabled(true);
                 setHomekey();
                 return;
             }else{

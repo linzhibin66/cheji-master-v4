@@ -30,11 +30,12 @@ public class NettyConf {
     public static String cx="";
     public static String version="1.0";//app版本号
     public static String model="V600ID";//终端型号
+    public static String termno;//终端编号
     public static String uid ="65DF6FEB,75A56FEB,05DD6FEB,85E574EB,15846FEB,052F73EB,F55E73EB,254173EB";//管理员卡uid
     public static String sbtype = "1";//识别类型 1指纹识别 4人脸识别
     public static String have_zw = "0";//是否有指纹识别，,0未检测，1有，2没有
     public static int rlsb_jd = 94;//人脸识别精准度0-100
-    public static String student_pic = "";//学员原始照片用来抓拍
+    public static String student_pic = "";//学员原始照片路径用来抓拍
 
     //本地存储
     public static String host="";

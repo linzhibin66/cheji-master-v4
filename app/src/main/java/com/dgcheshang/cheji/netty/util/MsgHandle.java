@@ -59,6 +59,7 @@ import com.dgcheshang.cheji.netty.timer.CardTimer;
 import com.dgcheshang.cheji.netty.timer.DzwlTimerTask;
 import com.dgcheshang.cheji.netty.timer.LoginoutTimer;
 import com.dgcheshang.cheji.netty.timer.StudentoutQzTimer;
+import com.dgcheshang.cheji.nettygps.conf.Params;
 import com.google.gson.Gson;
 
 import org.apache.commons.lang3.StringUtils;
@@ -532,6 +533,15 @@ public class MsgHandle {
                         NettyConf.dzwlTimer=new Timer();
                         NettyConf.dzwlTimer.schedule(new DzwlTimerTask(),0,NettyConf.dzwllxsj*1000);
                     }
+                }else if("0017".equals(id)){
+                    //GPS ip地址
+                    Params.gpshost=value;
+                }else if("0019".equals(id)){
+                    //GPS端口
+                    Params.gpsport=Integer.valueOf(value);
+                }else if("0042".equals(id)){
+                    //人脸识别阈值
+                    NettyConf.rlsb_jd=Integer.valueOf(value);
                 }
             }
             edit.commit();

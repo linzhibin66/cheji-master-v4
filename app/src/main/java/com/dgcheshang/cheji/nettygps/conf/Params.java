@@ -11,8 +11,8 @@ import java.util.Map;
  * @创建时间：2018/5/31 10:11
  ***********************************************/
 public class Params {
-    public final static String gpshost="59.37.17.67";//gps host
-    public final static int gpsport=13010;//gps port
+    public  static String gpshost="59.37.17.67";//gps host
+    public  static int gpsport=13010;//gps port
 
     //接收分包缓存数据
     public static Map<String,Object> fbdata=new HashMap<String,Object>();

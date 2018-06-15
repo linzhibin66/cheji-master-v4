@@ -88,6 +88,13 @@ public class GpsZdzc implements java.io.Serializable{
 		temp=ByteUtil.hexStringTOFinalbyte(ByteUtil.bytesToHexString(temp), 8, 2);
 		b=ByteUtil.byteMerger(b, temp);
 
+		if(xlh.length()<7){
+            String s="";
+			for(int i=0;i<7-xlh.length();i++){
+				s+="0";
+			}
+			xlh=s+xlh;
+		}
 		temp=xlh.getBytes();
 		temp=ByteUtil.hexStringTOFinalbyte(ByteUtil.bytesToHexString(temp), 7, 2);
 		b=ByteUtil.byteMerger(b, temp);

@@ -23,7 +23,7 @@ public class GpsClient implements Runnable{
 
     public void run(){
         if(NettyConf.debug) {
-            Log.e("TAG", "启动连接！");
+            Log.e("TAG", "Gps2-启动连接！");
         }
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -40,7 +40,7 @@ public class GpsClient implements Runnable{
             // 连接服务端
 
             if(NettyConf.debug) {
-                Log.e("TAG", Params.gpshost + ":" + Params.gpsport);
+                Log.e("TAG", "Gps2-"+Params.gpshost + ":" + Params.gpsport);
             }
 
             ChannelFuture f = b.connect(Params.gpshost, Params.gpsport).sync();

@@ -107,6 +107,7 @@ public class TrainReceiver extends BroadcastReceiver {
         gpsT=new Timer();
 
         gpsT.schedule(timer,5*1000,Params.gpsjg*1000);
+
     }
 
     public void handleXydl(){

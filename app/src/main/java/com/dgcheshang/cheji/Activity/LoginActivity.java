@@ -63,6 +63,7 @@ import com.dgcheshang.cheji.Tools.Helper;
 import com.dgcheshang.cheji.Tools.LoadingDialogUtils;
 import com.dgcheshang.cheji.Tools.Speaking;
 import com.dgcheshang.cheji.Tools.Speakout;
+import com.dgcheshang.cheji.Tools.VoipFloatService;
 import com.dgcheshang.cheji.broadcastReceiver.TrainReceiver;
 import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.thread.SpeakThread;
@@ -190,88 +191,93 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             if(msg.arg1==1) {//注销
                 handleCancel(msg);
             }else if(msg.arg1==2){
-                Bundle data = msg.getData();
-                final String scms = data.getString("scms");
-                final String tdh = data.getString("tdh");
-                final String lx = data.getString("lx");
-                final String gnss=data.getString("gnss");
-                //拍照提前发出滴滴声
-                soundPool.play(1,1, 1, 0, 0, 1);
-                //开启摄像头
-                mUSBMonitor.register();
-                stopcamera=false;
-                //判断抓拍模式是哪种
-                if(NettyConf.sbtype.equals("1")){
-                    //指纹识别 不比对照片
-                    final String path = captureSnapshot();
-                    postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
-                            //  关闭摄像头
-                            releaseCameraL();
-                            releaseCameraR();
-                            mUSBMonitor.unregister();
-                        }
-                    },3000);
-
-                }else {
-                    //人脸识别
-                    ismakephoto=true;
-                    String xyidcard = stusp.getString("xyidcard", "");//学员身份证
-                    //保存原照片
-                    boolean save_ok=isfiled(NettyConf.student_pic, xyidcard);
-
-                    //计时timer
-                    final Timer jstimer = new Timer();
-                        TimerTask task=new TimerTask() {
-                        @Override
-                        public void run() {
-                             js++;
-                            Log.e("TAG",js+"");
-                            final String path1 = captureSnapshot();
-                            stopcamera=compare(path1);
-                            if(stopcamera==true){
-                                jstimer.cancel();
-                                js=0;
-                                //上传拍照数据
-                                postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //关闭50秒定时器
-                                        ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path1);
-                                        //  关闭摄像头
-                                        releaseCameraL();
-                                        releaseCameraR();
-                                        mUSBMonitor.unregister();
-                                        ismakephoto=false;
-                                    }
-                                },3000);
+                if(isCameraL==true||isCameraR==true){
+                    //摄像头正常
+                    Bundle data = msg.getData();
+                    final String scms = data.getString("scms");
+                    final String tdh = data.getString("tdh");
+                    final String lx = data.getString("lx");
+                    final String gnss=data.getString("gnss");
+                    //拍照提前发出滴滴声
+                    soundPool.play(1,1, 1, 0, 0, 1);
+                    //开启摄像头
+                    mUSBMonitor.register();
+                    stopcamera=false;
+                    //判断抓拍模式是哪种
+                    if(NettyConf.sbtype.equals("1")){
+                        //指纹识别 不比对照片
+                        final String path = captureSnapshot();
+                        postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
+                                //  关闭摄像头
+                                releaseCameraL();
+                                releaseCameraR();
+                                mUSBMonitor.unregister();
                             }
-                             if(js==20){
-                                 //结束对比，直接抓拍
-                                 Log.e("TAG","结束对比，直接抓拍");
-                                 js=0;
-                                 stopcamera=true;
-                                 jstimer.cancel();
-                                 //拍照
-                                 final String path = captureSnapshot();
-                                 postDelayed(new Runnable() {
-                                     @Override
-                                     public void run() {
-                                         ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
-                                         //  关闭摄像头
-                                         releaseCameraL();
-                                         releaseCameraR();
-                                         mUSBMonitor.unregister();
-                                         ismakephoto=false;
-                                     }
-                                 },3000);
-                             }
-                        }
-                    };
-                    jstimer.schedule(task,0,3000);
+                        },3000);
 
+                    }else {
+                        //人脸识别
+                        ismakephoto=true;
+                        String xyidcard = stusp.getString("xyidcard", "");//学员身份证
+                        //保存原照片
+                        boolean save_ok=isfiled(NettyConf.student_pic, xyidcard);
+                        //计时timer
+                        final Timer jstimer = new Timer();
+                        TimerTask task=new TimerTask() {
+                            @Override
+                            public void run() {
+                                js++;
+                                Log.e("TAG",js+"");
+                                final String path1 = captureSnapshot();
+                                Log.e("TAG","拍照1");
+                                stopcamera=compare(path1);
+                                Log.e("TAG","拍照2");
+                                if(stopcamera==true){
+                                    jstimer.cancel();
+                                    js=0;
+                                    //上传拍照数据
+                                    postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path1);
+                                            //  关闭摄像头
+                                            releaseCameraL();
+                                            releaseCameraR();
+                                            mUSBMonitor.unregister();
+                                            ismakephoto=false;
+                                        }
+                                    },3000);
+                                }
+                                if(js==20){
+                                    //结束对比，直接抓拍
+                                    Log.e("TAG","结束对比，直接抓拍");
+                                    js=0;
+                                    stopcamera=true;
+                                    jstimer.cancel();
+                                    //拍照
+                                    final String path = captureSnapshot();
+                                    postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
+                                            //  关闭摄像头
+                                            releaseCameraL();
+                                            releaseCameraR();
+                                            mUSBMonitor.unregister();
+                                            ismakephoto=false;
+                                        }
+                                    },3000);
+                                }
+                            }
+                        };
+                        jstimer.schedule(task,0,3000);
+                    }
+                }else {
+                  //摄像头不正常
+                    Speaking.in("摄像头异常");
                 }
 
             }else if(msg.arg1==3){
@@ -303,26 +309,34 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
 
             }else if(msg.arg1==13){
                 //强制登出与指令拍照
-                Bundle data = msg.getData();
-                final String scms = data.getString("scms");
-                final String tdh = data.getString("tdh");
-                final String lx = data.getString("lx");
-                final String gnss=data.getString("gnss");
-                //拍照提前发出滴滴声
-                soundPool.play(1,1, 1, 0, 0, 1);
-                //开启摄像头
-                mUSBMonitor.register();
-                final String path = captureSnapshot();
-                postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
-                        //  关闭摄像头
-                        releaseCameraL();
-                        releaseCameraR();
-                        mUSBMonitor.unregister();
-                    }
-                },3000);
+                if(isCameraL==true||isCameraR==true){
+                    //摄像头正常
+                    Bundle data = msg.getData();
+                    final String scms = data.getString("scms");
+                    final String tdh = data.getString("tdh");
+                    final String lx = data.getString("lx");
+                    final String gnss=data.getString("gnss");
+                    //拍照提前发出滴滴声
+                    soundPool.play(1,1, 1, 0, 0, 1);
+                    //开启摄像头
+                    mUSBMonitor.register();
+                    final String path = captureSnapshot();
+                    postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ZdUtil.sendZpsc2(scms,tdh,lx,gnss,path);
+                            //  关闭摄像头
+                            releaseCameraL();
+                            releaseCameraR();
+                            mUSBMonitor.unregister();
+                        }
+                    },3000);
+                }else {
+                    //摄像头异常
+                    Speaking.in("摄像头异常");
+                }
+
+
             }
         }
     };
@@ -364,7 +378,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
 
         //拍照秒提示嘀嘀声初始化
         soundPool= new SoundPool(10, AudioManager.STREAM_SYSTEM,5);
-        soundPool.load(CjApplication.getInstance(), R.raw.didi,1);
+        soundPool.load(CjApplication.getInstance(), R.raw.didi4,1);
 
         //清除缓存数据
         CacheTimer cacheTimer=new CacheTimer();
@@ -463,6 +477,8 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         stusp = getSharedPreferences("student", Context.MODE_PRIVATE);//学员保存数据
         zdcs = getSharedPreferences("zdcs", Context.MODE_PRIVATE);//获取终端保存参数信息
         zdcs_edit = zdcs.edit();//终端参数编辑器
+        //从新赋值给学员原始路径
+        NettyConf.student_pic = stusp.getString("stuphoto", "");
 
         View layout_back = findViewById(R.id.layout_back);//返回
         View layout_coach = findViewById(R.id.layout_coach);//教练
@@ -487,20 +503,22 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         layout_showphoto.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                //点击其他地方关闭摄像头页面
-                layout_showphoto.setVisibility(View.INVISIBLE);
-                //关闭摄像头
-                if(mUSBMonitor.isRegistered()){
-                    //注册了
-                    releaseCameraR();
-                    releaseCameraL();
-                    mUSBMonitor.unregister();
+                if(ZdUtil.ispz==false){
+                    //点击其他地方关闭摄像头页面
+                    layout_showphoto.setVisibility(View.INVISIBLE);
+                    //关闭摄像头
+                    if(mUSBMonitor.isRegistered()){
+                        //注册了
+                        releaseCameraR();
+                        releaseCameraL();
+                        mUSBMonitor.unregister();
+                    }
                 }
                 return true;
             }
         });
 
-        //摄像头
+//        //摄像头
         mUVCCameraViewL = (UVCCameraTextureView)findViewById(R.id.camera_view_L);
         mUVCCameraViewL.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
 
@@ -535,15 +553,16 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         Intent intent = new Intent();
         switch (view.getId()) {
             case R.id.layout_back://摄像头
-                layout_showphoto.setVisibility(View.VISIBLE);
-              if(mUSBMonitor!=null){
-                  //注册了
-                  releaseCameraR();
-                  releaseCameraL();
-                  mUSBMonitor.unregister();
-              }
-                mUSBMonitor.register();
-
+                if(ZdUtil.ispz==false){
+                    layout_showphoto.setVisibility(View.VISIBLE);
+                    if(mUSBMonitor!=null){
+                        //注册了
+                        releaseCameraR();
+                        releaseCameraL();
+                        mUSBMonitor.unregister();
+                    }
+                    mUSBMonitor.register();
+                }
                 break;
 
             case R.id.layout_coach://教练员登录
@@ -684,18 +703,9 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        if(NettyConf.debug) {
-            Log.e("TAG", "onStart:");
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         handleshow();
-
     }
 
     public void handleshow(){
@@ -711,68 +721,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             //息屏
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-    }
-
-    @Override
-    protected void onStop() {
-        if(NettyConf.debug) {
-            Log.e("TAG", "onStop:");
-        }
-//        mUSBMonitor.unregister();
-
-        //关闭摄像头
-        if(mUSBMonitor.isRegistered()){
-            //注册了
-            releaseCameraR();
-            releaseCameraL();
-            mUSBMonitor.unregister();
-        }
-        super.onStop();
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.e("TAG", "onDestroy:");
-        releaseCameraL();
-        releaseCameraR();
-        //stopAudio();
-
-        if (mUSBMonitor != null) {
-            mUSBMonitor.destroy();
-            mUSBMonitor = null;
-        }
-
-        if(qzOutTimer!=null){
-            qzOutTimer.cancel();
-        }
-
-        //解绑广播
-        if(receiver!=null){
-            unregisterReceiver(receiver);
-        }
-        if(networkReceiver!=null){
-            unregisterReceiver(networkReceiver);
-        }
-        if(trainReceiver!=null) {
-            this.unregisterReceiver(trainReceiver);
-        }
-        if(loading!=null){
-            loading.cancel();
-        }
-
-        if(Speakout.tts!=null){
-            Speakout.tts.stop();
-            Speakout.tts.shutdown();
-            Speakout.tts=null;
-        }
-
-        if(b){
-            unbindService(mServiceConnection);
-        }
-
-        //删除人脸识别初始化
-        FaceDet.FaceDetDeInit();
-        super.onDestroy();
     }
 
 
@@ -1047,7 +995,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                 if(state){
                     ZdUtil.conServer();
 
-//                    GpsUtil.conServer();
+                    GpsUtil.conServer();
                 }
             } else if (NettyConf.netstate != state) {
                 NettyConf.netstate = state;
@@ -1055,7 +1003,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                 if (state) {
                     ZdUtil.conServer();
 
-//                    GpsUtil.conServer();
+                    GpsUtil.conServer();
                 } else {
                     NettyConf.constate = 0;
                     NettyConf.jqstate = 0;
@@ -1248,8 +1196,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             } catch (Exception e){}
             return snapshotFileNameR;
         }
-
-
 
 //        if(isCameraL==true){
 //            return snapshotFileNameL;
@@ -1559,7 +1505,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         }
     }
 
-
     /**
      * 判断文件是否存在并保存
      * */
@@ -1580,7 +1525,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         }
     }
 
-
     /**
      * 比对照片
      * */
@@ -1590,9 +1534,11 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        Log.e("TAG","拍照3");
         if (faceResult.size() > 0) {
             faceResult.clear();
         }
+        Log.e("TAG","拍照4");
         boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
         Log.e("TAG","获取比对照片轮廓结果=" + ret);
         if(ret==true){
@@ -1613,8 +1559,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
             return false;
         }
-//        MatchName = FaceDet.FaceDetectMuti(newImagePath, thd);
-//        printLog("MatchName:" + MatchName);
 
     }
 
@@ -1654,7 +1598,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
     /**
      * 初始化人脸识别摄像头
      * */
-
     public void initrlCamera(){
         Timer initbdtimer = new Timer();
         TimerTask task=new TimerTask() {
@@ -1669,6 +1612,69 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         };
         initbdtimer.schedule(task,500);
         RlsbUtil.addtimer(initbdtimer);
+    }
+
+    @Override
+    protected void onStop() {
+        if(NettyConf.debug) {
+            Log.e("TAG", "onStop:");
+        }
+//        mUSBMonitor.unregister();
+
+        //关闭摄像头
+        if(mUSBMonitor.isRegistered()){
+            //注册了
+            releaseCameraR();
+            releaseCameraL();
+            mUSBMonitor.unregister();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.e("TAG", "onDestroy:");
+        //stopAudio();
+
+        if (mUSBMonitor != null) {
+            mUSBMonitor.destroy();
+            mUSBMonitor = null;
+        }
+
+        if(qzOutTimer!=null){
+            qzOutTimer.cancel();
+        }
+
+        //解绑广播
+        if(receiver!=null){
+            unregisterReceiver(receiver);
+        }
+        if(networkReceiver!=null){
+            unregisterReceiver(networkReceiver);
+        }
+        if(trainReceiver!=null) {
+            this.unregisterReceiver(trainReceiver);
+        }
+        if(loading!=null){
+            loading.cancel();
+        }
+
+        if(Speakout.tts!=null){
+            Speakout.tts.stop();
+            Speakout.tts.shutdown();
+            Speakout.tts=null;
+        }
+
+        if(b){
+            unbindService(mServiceConnection);
+        }
+
+        //删除人脸识别初始化
+        if(FaceDet!=null){
+            FaceDet.FaceDetDeInit();
+        }
+
+        super.onDestroy();
     }
 
 }

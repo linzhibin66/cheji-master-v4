@@ -1,5 +1,7 @@
 package com.dgcheshang.cheji.nettygps.task;
 
+import android.util.Log;
+
 import com.dgcheshang.cheji.Database.DbHandle;
 import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.po.Tdata;
@@ -10,6 +12,8 @@ import com.dgcheshang.cheji.netty.util.LocationUtil;
 import com.dgcheshang.cheji.nettygps.conf.Params;
 import com.dgcheshang.cheji.nettygps.util.GpsMsgUtilClient;
 import com.dgcheshang.cheji.nettygps.util.GpsUtil;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.TimerTask;
@@ -26,9 +30,12 @@ public class GpsSendTask extends TimerTask {
     public void run() {
         if(LocationUtil.state&& Params.gpsjqstate==1) {
             String gnss = GpsUtil.getGnss();
-            byte[] b2 = ByteUtil.hexStringToByte(gnss);
-            List<Tdata> list = GpsMsgUtilClient.generateMsg(b2, "0200", GpsMsgUtilClient.generateLsh(), NettyConf.mobile, "0");
-            GatewayService.sendHexMsgToServer("gpsChannel",list);
+            if(StringUtils.isNotEmpty(gnss)) {
+                byte[] b2 = ByteUtil.hexStringToByte(gnss);
+                List<Tdata> list = GpsMsgUtilClient.generateMsg(b2, "0200", GpsMsgUtilClient.generateLsh(), NettyConf.mobile, "0");
+                Log.e("TAG","转发GPS");
+                GatewayService.sendHexMsgToServer("gpsChannel", list);
+            }
         }
     }
 }

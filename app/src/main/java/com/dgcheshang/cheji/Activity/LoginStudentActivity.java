@@ -22,6 +22,7 @@ import android.os.Message;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -108,6 +109,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     RFIDWithISO14443A mRFID;
     SharedPreferences sp;
     View layout_shenfen;
+    ImageView image_stu;
     TextView tv_bianhao,tv_idcard,tv_kechen,tv_carlx,tv_stu_name,tv_logintime,tv_IDcard,tv_stuname,tv_cartype,tv_valid_time;
     SharedPreferences.Editor editor;
     Dialog loading;
@@ -121,7 +123,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     TextView tv_zhiwen;
 
     View layout_showphoto;//拍照框
-    String fileurl="/sdcard/xypic/";//下载教练员图片文件夹路径
+    String fileurl="/sdcard/jlpic/";//下载学员图片文件夹路径
     BroadcastReceiver receiver;//下载广播
 
     private USBMonitor mUSBMonitor;					// 用于监视USB设备接入
@@ -145,12 +147,10 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     private CameraRecorder mp4RecorderR=new CameraRecorder(2);
     private int currentWidth = UVCCamera.DEFAULT_PREVIEW_WIDTH;
     private int currentHeight = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
-    Button bt_open,bt_close;
-    private ImageButton mCaptureButton;//拍照按钮
-//    private FaceDetJni FaceDet = new FaceDetJni();
+
     public String landmarks_path, facenet_path, train_path;
 //    List<FD_FSDKFace> faceResult = new ArrayList<>();
-
+    boolean isback=true;//点击返回键是否生效
     Handler handler=new  Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -169,7 +169,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                 //读卡获取学员信息
                 Bundle data = msg.getData();
                 xyxx = (SfrzR) data.getSerializable("xyxx");
-                xyxx.setXx("http://192.168.0.111:8092/lin.jpg");
+//                xyxx.setXx("http://192.168.0.111:8092/lin.jpg");
                 getXyxx(xyxx);
             }else if(msg.arg1==6){//uid
                 String xyuid = msg.getData().getString("xyuid");
@@ -214,6 +214,11 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     Speaking.in("密码验证失败");
                 }
 
+            }else if(msg.arg1==15){
+                //比对成功后关闭摄像头预览框
+                layout_showphoto.setVisibility(View.INVISIBLE);
+                image_zhiwen.setBackgroundResource(R.mipmap.login_face_y);//显示人脸识别成功
+                loading = LoadingDialogUtils.createLoadingDialog(context,"处理中...");
             }
         }
     };
@@ -286,6 +291,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         tv_IDcard = (TextView) findViewById(R.id.tv_IDcard);//身份证号
         tv_stuname = (TextView) findViewById(R.id.tv_stuname);//姓名
         tv_cartype = (TextView) findViewById(R.id.tv_cartype);//车型
+        image_stu = (ImageView) findViewById(R.id.image_stu);//学员证件照
         Button bt_validtime = (Button) findViewById(R.id.bt_validtime);//有效学时查询
         bt_validtime.setOnClickListener(this);
         View layout_qzout = findViewById(R.id.layout_qzout);//强制登出
@@ -295,6 +301,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             layout_studentout.setVisibility(View.VISIBLE);
             layout_qzout.setVisibility(View.VISIBLE);
             tv_title.setText("学员管理");
+            showCoachPhoto();
             String xybh = sp.getString("xybh", "");//学员编号
             tv_studentcode.setText(xybh);
             int wcxs = sp.getInt("wcxs", 0);//当前培训部分已完成学时
@@ -361,18 +368,8 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         //摄像头
         mUVCCameraViewL = (UVCCameraTextureView)findViewById(R.id.camera_view_L);
         mUVCCameraViewL.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
-        mUVCCameraViewR = (UVCCameraTextureView)findViewById(R.id.camera_view_R);
-        mUVCCameraViewR.setAspectRatio(PREVIEW_WIDTH / (float)PREVIEW_HEIGHT);
-        mCaptureButton = (ImageButton)findViewById(R.id.capture_button);
-        mCaptureButton.setOnClickListener(mOnClickListener);
-        mUVCCameraViewL.setOnClickListener(mOnClickListener);
-        mUVCCameraViewR.setOnClickListener(mOnClickListener);
-        bt_open = (Button) findViewById(R.id.bt_open);
-        bt_close = (Button) findViewById(R.id.bt_close);
-        bt_open.setOnClickListener(mOnClickListener);
-        bt_close.setOnClickListener(mOnClickListener);
-        refreshControls();
 
+        refreshControls();
 
         layout_back.setOnClickListener(this);
         bt_choose.setOnClickListener(this);
@@ -778,18 +775,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             }else {
                 //人脸识别
                 if(ZdUtil.ispz==false){
-                    ZdUtil.ispz=true;
-
-                    initrlCamera();
-                    Timer startsbtimer = new Timer();
-                    TimerTask task=new TimerTask() {
-                        @Override
-                        public void run() {
-                            commonXy2(xyxx,"login");
-                        }
-                    };
-                    startsbtimer.schedule(task,3000);
-                    RlsbUtil.addtimer(startsbtimer);
+                    commonXy2(xyxx,"login");
                 }else {
                     Toast.makeText(context,"正在拍照，请稍后...",Toast.LENGTH_SHORT).show();
                 }
@@ -816,18 +802,8 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             }else {
                 //人脸识别
                 if(ZdUtil.ispz==false){
-                    ZdUtil.ispz=true;
 
-                    initrlCamera();
-                    Timer timer = new Timer();
-                    TimerTask task=new TimerTask() {
-                        @Override
-                        public void run() {
-                            commonXy2(xyxx,"out");
-                        }
-                    };
-                    timer.schedule(task,3000);
-                    RlsbUtil.addtimer(timer);
+                    commonXy2(xyxx,"out");
                 }else {
                     Toast.makeText(context,"正在拍照，请稍后...",Toast.LENGTH_SHORT).show();
                 }
@@ -879,29 +855,33 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * 人脸识别通道
      * type 分为login和out
      * */
-    public void commonXy2(SfrzR xyxx,String type){
-        Speaking.in("正在人脸识别，请对准摄像头");
-        String xx = xyxx.getXx();//下载路径
-//        xx=new String(ByteUtil.hexStringToByte(xx));
-        Log.e("TAG","学员下载图片路径："+xx);
-        String sfzh = xyxx.getSfzh();
-        //判断文件夹是否存在
-        RlsbUtil.isexistAndBuild(fileurl);
-        //教练原始照片路径
-        String xyzp=fileurl+sfzh+".jpg";
-        if(RlsbUtil.isFileExist(xyzp)==false){
-            //没有学员照片去下载
-            downFile(xx,sfzh,xyzp,type);
-        }else {
-            //有学员照片直接抓拍验证
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    Timer rlsbtimer;
+    public void commonXy2(final SfrzR xyxx,final String type){
+        ZdUtil.ispz=true;
+        isback=false;
+        initrlCamera();
+        rlsbtimer = new Timer();
+        TimerTask rlsbtask=new TimerTask() {
+            @Override
+            public void run() {
+                String xx = xyxx.getXx();//下载路径
+                xx=new String(ByteUtil.hexStringToByte(xx));
+                Log.e("TAG","学员下载图片路径："+xx);
+                String sfzh = xyxx.getSfzh();
+                //判断文件夹是否存在
+                RlsbUtil.isexistAndBuild(fileurl);
+                //教练原始照片路径
+                String xyzp=fileurl+sfzh+".jpg";
+                if(RlsbUtil.isFileExist(xyzp)==false){
+                    //没有学员照片去下载
+                    downFile(xx,sfzh,xyzp,type);
+                }else {
+                    //有学员照片直接抓拍验证
+                    rlsb(xyzp,sfzh, type);
+                }
             }
-            rlsb(xyzp,sfzh, type);
-        }
-
+        };
+        rlsbtimer.schedule(rlsbtask,2000);
     }
 
     /**
@@ -917,9 +897,8 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         mUSBMonitor.setDeviceFilter(filters);
         mUSBMonitor.register();//start
         refreshControls();
-
+        Speaking.in("正在人脸识别，请对准摄像头");
         showCamera();
-
         Timer initbdtimer = new Timer();
         TimerTask task=new TimerTask() {
             @Override
@@ -1055,7 +1034,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd.HH.mm.ss.SSSS");
         Date currentTime = new Date();
         //判断哪个摄像头在使用，则抓拍哪个
-        if(isCameraL==true){
+
             //左边摄像头在使用
             snapshotFileNameL = Environment.getExternalStorageDirectory().getAbsolutePath() + "/chejiCamera";
             File path = new File(snapshotFileNameL);
@@ -1078,32 +1057,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
 
             return snapshotFileNameL;
 
-        }else {
-            //右边摄像头在使用
-            snapshotFileNameR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/chejiCamera";
-            File path1 = new File(snapshotFileNameR);
-            if (!path1.exists())
-                path1.mkdirs();
-            snapshotFileNameR += "/IPC_";
-            snapshotFileNameR += format.format(currentTime);
-            snapshotFileNameR += ".R.jpg";
-            File recordFile = new File(snapshotFileNameR);		// 右边摄像头快照的文件名
-            if(recordFile.exists()) {
-                recordFile.delete();
-            }
-            try {
-                recordFile.createNewFile();
-                snapshotOutStreamR = new FileOutputStream(recordFile);
-            } catch (Exception e){}
-
-            return snapshotFileNameR;
-        }
-
-//        if(isCameraL==true){
-//            return snapshotFileNameL;
-//        }else{
-//            return snapshotFileNameR;
-//        }
     }
 
 
@@ -1143,42 +1096,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         }
     }
 
-    private synchronized void releaseCameraR() {
-        synchronized (this) {
-
-            if (mUVCCameraR != null) {
-                try {
-                    mUVCCameraR.setStatusCallback(null);
-                    mUVCCameraR.setButtonCallback(null);
-                    mUVCCameraR.close();
-                    mUVCCameraR.destroy();
-                } catch (final Exception e) {
-                    Log.e(TAG, e.getMessage());
-                } finally {
-                    //Log.d(TAG, "*******mUVCCameraR mUVCCameraR=null");
-                    mUVCCameraR = null;
-                }
-            }
-
-            if (mRightPreviewSurface != null) {
-                mRightPreviewSurface.release();
-                mRightPreviewSurface = null;
-            }
-//			try {
-//
-//				if (mRightPreviewSurface != null) {
-//					mRightPreviewSurface.release();
-//					mRightPreviewSurface = null;
-//				}
-//			}
-//			 catch (final Exception e) {
-//					Log.e(TAG, e.getMessage());
-//			}finally{
-//				mRightPreviewSurface = null;
-//				//Log.d(TAG, "*******releaseCameraL mRightPreviewSurface=null");
-//			}
-        }
-    }
 
     //判断是哪个摄像头在使用
     Boolean isCameraL =false;
@@ -1255,7 +1172,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                 }
 
                 // 将摄像头进行分配
-                if(ctrlBlock.getVenderId() == 2 && mUVCCameraL == null) {
+                if(ctrlBlock.getVenderId() == 2 ||ctrlBlock.getVenderId() == 3&& mUVCCameraL == null) {
                     isCameraL=true;
                     mUVCCameraL = camera;
                     try {
@@ -1274,23 +1191,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     } catch (final Exception e) {
                         Log.e(TAG, e.getMessage());
                     }
-                } else if(ctrlBlock.getVenderId() == 3 && mUVCCameraR == null) {
-                    //判断右边摄像头可用
-                    isCameraL=false;
-                    isCameraR=true;
-                    mUVCCameraR = camera;
-                    if (mRightPreviewSurface != null) {
-                        mRightPreviewSurface.release();
-                        mRightPreviewSurface = null;
-                    }
-
-                    final SurfaceTexture st = mUVCCameraViewR.getSurfaceTexture();
-                    if (st != null)
-                        mRightPreviewSurface = new Surface(st);
-                    mUVCCameraR.setPreviewDisplay(mRightPreviewSurface);
-
-                    mUVCCameraR.setFrameCallback(mUVCFrameCallbackR, UVCCamera.PIXEL_FORMAT_YUV420SP);
-                    mUVCCameraR.startPreview();
                 }
 
                 runOnUiThread(new Runnable() {
@@ -1333,13 +1233,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     }
                 });
 
-            } else if ((mUVCCameraR != null) && mUVCCameraR.getDevice().equals(device)) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        releaseCameraR();
-                    }
-                });
             }
 
         }
@@ -1387,54 +1280,11 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         }
     };
 
-    // 参考上面的注释
-    private final IFrameCallback mUVCFrameCallbackR = new IFrameCallback() {
-        @Override
-        public void onFrame(final ByteBuffer frame) {
-
-            if(mUVCCameraR == null)
-                return;
-
-            final Size size = mUVCCameraR.getPreviewSize();
-            byte[] buffer = null;
-
-            int FrameSize = frame.remaining();
-            if (buffer == null) {
-                buffer = new byte[FrameSize];
-                frame.get(buffer);
-            }
-
-            if (mp4RecorderR.isVideoRecord()) {
-                mp4RecorderR.feedData(buffer);
-            }
-
-            if(snapshotOutStreamR != null) {
-                if (!(FrameSize < size.width * size.height * 3 / 2) && (buffer != null)) {
-                    try {
-                        new YuvImage(buffer, ImageFormat.NV21, size.width, size.height, null).compressToJpeg(new Rect(0, 0, size.width, size.height), 60, snapshotOutStreamR);
-                        snapshotOutStreamR.flush();
-                        snapshotOutStreamR.close();
-                        Helper.fileSavedProcess(LoginStudentActivity.this, snapshotFileNameR);
-                    } catch (Exception ex) {
-                    } finally {
-                        snapshotOutStreamR = null;
-                    }
-                }
-            }
-            buffer = null;
-        }
-    };
 
     // 刷新UI控件状态
     private void refreshControls() {
         try {
-            boolean enabled = (mUVCCameraL != null || mUVCCameraR != null);
-
-            findViewById(R.id.capture_button).setEnabled(enabled);
-
             findViewById(R.id.textViewUVCPromptL).setVisibility(mUVCCameraL != null ? View.GONE : View.VISIBLE);
-            findViewById(R.id.textViewUVCPromptR).setVisibility(mUVCCameraR != null ? View.GONE : View.VISIBLE);
-
             invalidateOptionsMenu();
         } catch (Exception e){}
     }
@@ -1450,10 +1300,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             if(ret==true){
                 //成功获取轮廓并保存
                 boolean mIsSave = FaceDet.CaptureFaceMuti(mageurl, name);
-                //保存
-                NettyConf.student_pic=mageurl;
-                editor.putString("stu_pic",mageurl);
-                editor.commit();
                 return true;
             }else {
                 return false;
@@ -1472,7 +1318,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         Uri uri = Uri.parse(url);
         DownloadManager.Request request = new DownloadManager.Request(uri);
         // 设置下载路径和文件名
-        request.setDestinationInExternalPublicDir("xypic", sfzh+".jpg");
+        request.setDestinationInExternalPublicDir("jlpic", sfzh+".jpg");
         request.setMimeType("application/vnd.android.package-archive");
         request.setAllowedOverRoaming(false);
         // 设置为可被媒体扫描器找到
@@ -1490,6 +1336,9 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     //下载完成操作，保存原照片 身份证号用来区别
                     rlsb(xyzp, sfzh,type);
 
+                }else {
+                    Log.e("TAG","下载学员照片失败");
+                    Speaking.in("照片下载失败");
                 }
             }
         };
@@ -1499,36 +1348,90 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     /**
      * 人脸识别成功后处理教练登录或教练登出
      * */
-    public void rlsb(String xyzp, String sfzh, final String type){
+     Timer pztimer;
+    boolean stopcamera=false;
+    TimerTask pztask;
+    int isfinishphoto=0;//超过60秒自动关闭
+    public void rlsb(final String xyzp, String sfzh, final String type){
+        try {
+            Thread.sleep(800);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //保存学员原始照片
         boolean save_ok=isfiled(xyzp, sfzh);
-        boolean stopcamera=false;
-        if(save_ok==true){
-            while (stopcamera==false){
-                String path = captureSnapshot();
-                stopcamera=compare(path);
-                if(stopcamera==true){
-                    //关闭摄像头
-                    closeCamera();
-                    ZdUtil.ispz=false;
-                    Timer rlcltimer = new Timer();
-                    TimerTask task=new TimerTask() {
-                        @Override
-                        public void run() {
-                            //识别正确人脸
-                            if(type.equals("login")){
-                                //登录处理
-                                studentLogin();
-                            }else if(type.equals("out")){
-                                //登出处理
-                                studentOut1();
-                            }
+        isback=true;
+        if(save_ok==true &&isCameraL==true){
+            pztimer = new Timer();
+            pztask=new TimerTask() {
+                @Override
+                public void run() {
+                    if(isfinishphoto<20){
+                        isfinishphoto++;
+                        String path = captureSnapshot();
+                        boolean stopcamera=compare(path);
+                        if(stopcamera==true){
+                            //关闭摄像头
+                            pztimer.cancel();
+                            closeCamera();
+                            ZdUtil.ispz=false;
+                            Timer rlcltimer = new Timer();
+                            TimerTask task=new TimerTask() {
+                                @Override
+                                public void run() {
+                                    //识别正确人脸
+                                    if(type.equals("login")){
+                                        //登录处理
+                                        NettyConf.student_pic=xyzp;
+                                        editor.putString("stuphoto",xyzp);
+                                        editor.commit();
+                                        studentLogin();
+                                    }else if(type.equals("out")){
+                                        //登出处理
+                                        studentOut1();
+                                    }
+                                }
+                            };
+                            rlcltimer.schedule(task,200);
+                            RlsbUtil.addtimer(rlcltimer);
                         }
-                    };
-                    rlcltimer.schedule(task,2000);
-                    RlsbUtil.addtimer(rlcltimer);
+                    }else {
+                        //超过60秒自动关闭页面
+                        pztimer.cancel();
+                        closeCamera();
+                        ZdUtil.ispz=false;
+                        finish();
+                    }
+
                 }
-            }
+            };
+            pztimer.schedule(pztask,200,3000);
+            RlsbUtil.addtimer(pztimer);
+//            while (stopcamera==false){
+//                String path = captureSnapshot();
+//                stopcamera=compare(path);
+//                if(stopcamera==true){
+//                    //关闭摄像头
+//                    closeCamera();
+//                    ZdUtil.ispz=false;
+//                    Timer rlcltimer = new Timer();
+//                    TimerTask task=new TimerTask() {
+//                        @Override
+//                        public void run() {
+//                            //识别正确人脸
+//                            if(type.equals("login")){
+//                                //登录处理
+//                                studentLogin();
+//                            }else if(type.equals("out")){
+//                                //登出处理
+//                                studentOut1();
+//                            }
+//                        }
+//                    };
+//                    rlcltimer.schedule(task,200);
+//                    RlsbUtil.addtimer(rlcltimer);
+//                }
+//            }
         }else {
             //保存原始图片失败
             Speaking.in("人脸识别失败");
@@ -1573,27 +1476,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
 
     }
 
-    private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            switch (view.getId()) {
-                case R.id.capture_button:
-                    captureSnapshot();
-                    break;
-
-                case R.id.bt_open:
-                    mUSBMonitor.register();
-                    break;
-
-                case R.id.bt_close:
-                    releaseCameraL();
-                    releaseCameraR();
-                    mUSBMonitor.unregister();
-                    break;
-            }
-        }
-    };
-
     /**
      * 显示拍照预览框
      * */
@@ -1601,7 +1483,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         layout_showphoto.setVisibility(View.VISIBLE);
         if(mUSBMonitor!=null){
             //注册了
-            releaseCameraR();
             releaseCameraL();
             mUSBMonitor.unregister();
         }
@@ -1612,13 +1493,24 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * 关闭拍照预览框
      * */
     public void closeCamera(){
-//      layout_showphoto.setVisibility(View.INVISIBLE);
         if(mUSBMonitor.isRegistered()){
             //注册了
-            releaseCameraR();
             releaseCameraL();
             mUSBMonitor.unregister();
         }
+        //发送主线程关闭摄像头预览框
+        Message msg = new Message();
+        msg.arg1=15;
+        handler.sendMessage(msg);
+
+
+    }
+    /***
+     * 显示本地学员证件照
+     * */
+    public void showCoachPhoto(){
+        String url=sp.getString("stuphoto","");;
+        image_stu.setImageURI(Uri.fromFile(new File(url)));
     }
 
     @Override
@@ -1631,13 +1523,42 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         }
     }
 
-/**
- * 页面关闭后调用
- *
- * */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.e("TAG","onstop");
+        if(pztask!=null){
+            pztask.cancel();
+            ZdUtil.ispz=false;
+        }
+        if(pztimer!=null){
+            pztimer.cancel();
+            ZdUtil.ispz=false;
+        }
+
+        if(rlsbtimer!=null){
+            rlsbtimer.cancel();
+            ZdUtil.ispz=false;
+        }
+        stopcamera=true;
+        //关闭USB摄像头
+        if (mUSBMonitor != null) {
+            releaseCameraL();
+            mUSBMonitor.unregister();
+//            mUSBMonitor.destroy();
+//            mUSBMonitor = null;
+        }
+//        RlsbUtil.deltimers();
+    }
+
+    /**
+    * 页面关闭后调用
+    *
+    * */
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.e("TAG","onDestroy");
         //清除计时器
         if(timer!=null){
             timer.cancel();
@@ -1672,8 +1593,16 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         if(FaceDet!=null){
             FaceDet.FaceDetDeInit();
         }
+        if(rlsbtimer!=null){
+            rlsbtimer.cancel();
+        }
+        if(pztimer!=null){
+            pztimer.cancel();
+            ZdUtil.ispz=false;
+        }
+        stopcamera=true;
         NettyConf.handlersmap.remove("loginstudent");
-        RlsbUtil.deltimers();
+//        RlsbUtil.deltimers();
     }
 
     @Override
@@ -1684,5 +1613,19 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     @Override
     public void onDialogResult(boolean b) {
 
+    }
+
+    /**
+     * 返回键监听
+     * */
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(isback==true){
+                finish();
+            }
+            return false;
+        }else {
+            return super.onKeyDown(keyCode, event);
+        }
     }
 }

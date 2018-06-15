@@ -303,6 +303,45 @@ public class ByteToCls {
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
+
+			if(sbody.length>22){
+				temp= ByteUtil.subBytes(sbody, 22, 12);
+				hs= ByteUtil.bytesToHexString(temp);
+				hs= ByteUtil.clearHexStringfront(hs);
+				temp= ByteUtil.hexStringToByte(hs);
+				try {
+					deviceInfo.setModel(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+
+				temp= ByteUtil.subBytes(sbody, 34, 12);
+				hs= ByteUtil.bytesToHexString(temp);
+				hs= ByteUtil.clearHexStringfront(hs);
+				temp= ByteUtil.hexStringToByte(hs);
+				try {
+					deviceInfo.setTermno(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			}
+			if(sbody.length>46){
+				temp= ByteUtil.subBytes(sbody, 46, 2);
+				try {
+					deviceInfo.setSyid(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+
+				temp= ByteUtil.subBytes(sbody, 48, 4);
+				try {
+					deviceInfo.setSxyid(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			}
+
+
 		}
 		return deviceInfo;
 	}

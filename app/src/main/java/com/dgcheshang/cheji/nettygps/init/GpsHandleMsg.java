@@ -78,7 +78,7 @@ public class GpsHandleMsg extends Thread{
                     msgHandle.handle(ma);
                 }
             } else {
-                Speaking.in("获取数据不完整");
+                //Speaking.in("获取数据不完整");
                 //错误
                 hexmsg = msgUtilClient.getCommonRC(ma.getHeader(), "2");
                 if (StringUtils.isNotEmpty(hexmsg)) {

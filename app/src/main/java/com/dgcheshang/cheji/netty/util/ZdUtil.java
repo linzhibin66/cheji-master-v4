@@ -130,21 +130,48 @@ public class ZdUtil {
 	/**
 	 * 照片初始化
 	 * */
-	public static void sendZpsc(String scms,String tdh,String lx){
-		ispz=true;//正在拍照中
+	public static void sendZpsc(final String scms, final String tdh, final String lx){
 
-		String gnss=ZdUtil.getGnss4();
-        Message msg=new Message();
-        msg.arg1=2;
-        Bundle bundle = new Bundle();
-        bundle.putString("scms",scms);
-        bundle.putString("tdh",tdh);
-        bundle.putString("lx",lx);
-		bundle.putString("gnss",gnss);
-        msg.setData(bundle);
-		Timer ysTimer=new Timer();
-		PzysTimer pt=new PzysTimer(msg);
-		ysTimer.schedule(pt,1000);
+        final String gnss=ZdUtil.getGnss4();
+        if(ispz==false){
+			ispz=true;//正在拍照中
+            Message msg=new Message();
+            msg.arg1=2;
+            Bundle bundle = new Bundle();
+            bundle.putString("scms",scms);
+            bundle.putString("tdh",tdh);
+            bundle.putString("lx",lx);
+            bundle.putString("gnss",gnss);
+            msg.setData(bundle);
+            Timer ysTimer=new Timer();
+            PzysTimer pt=new PzysTimer(msg);
+            ysTimer.schedule(pt,1000);
+        }else {
+			//拍照中时等待拍照
+            final Timer timer = new Timer();
+            TimerTask task=new TimerTask() {
+                @Override
+                public void run() {
+                    if(ispz==false){
+                        timer.cancel();
+                        Message msg=new Message();
+                        msg.arg1=2;
+                        Bundle bundle = new Bundle();
+                        bundle.putString("scms",scms);
+                        bundle.putString("tdh",tdh);
+                        bundle.putString("lx",lx);
+                        bundle.putString("gnss",gnss);
+                        msg.setData(bundle);
+                        Timer ysTimer=new Timer();
+                        PzysTimer pt=new PzysTimer(msg);
+                        ysTimer.schedule(pt,1000);
+                    }
+                }
+            };
+            timer.schedule(task,0,3000);
+        }
+
+
 	}
 
 	/**
@@ -152,7 +179,6 @@ public class ZdUtil {
 	 * */
 	public static void sendZpscQz(String scms,String tdh,String lx){
 		ispz=true;//正在拍照中
-
 		String gnss=ZdUtil.getGnss4();
 		Message msg=new Message();
 		msg.arg1=13;
@@ -351,6 +377,7 @@ public class ZdUtil {
 		List<Tdata> list=MsgUtilClient.generateMsg(b2,"0003",NettyConf.mobile,"0");
 		GatewayService.sendHexMsgToServer("serverChannel",list);
 	}
+
 
 	/**
 	 * 发送补传分包数据

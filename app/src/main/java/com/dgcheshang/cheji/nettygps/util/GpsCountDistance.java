@@ -107,8 +107,8 @@ public class GpsCountDistance {
                 if(NettyConf.debug){
                     Log.e("TAG","一次有效里程(m):"+s);
                 }
-                totalMile += s;
-                totalFMile += s;
+                //totalMile += s;
+                //totalFMile += s;
                 SharedPreferences sp = CjApplication.getInstance().getSharedPreferences("gpscommon", Context.MODE_PRIVATE);
                 SharedPreferences.Editor edit = sp.edit();
                 edit.putInt("zlc",sp.getInt("zlc",0)+(int)s);

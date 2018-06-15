@@ -9,6 +9,7 @@ import com.dgcheshang.cheji.R;
 import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.util.LocationUtil;
 import com.dgcheshang.cheji.netty.util.ZdUtil;
+import com.dgcheshang.cheji.nettygps.conf.Params;
 
 /**
  * 车辆信息
@@ -16,7 +17,8 @@ import com.dgcheshang.cheji.netty.util.ZdUtil;
 public class CarDetailActivity extends BaseInitActivity implements View.OnClickListener{
     Context context=CarDetailActivity.this;
 
-    TextView tv_net_state,tv_con_state,tv_jq_state,tv_gps_state,tv_camera_state,tv_self_ip;
+    TextView tv_net_state,tv_con_state,tv_jq_state,tv_gps_state,tv_camera_state,tv_self_ip,tv_zdbh;
+    TextView tv_ptgps_lj,tv_ptgps_jq;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,12 +40,28 @@ public class CarDetailActivity extends BaseInitActivity implements View.OnClickL
         tv_jq_state = (TextView) findViewById(R.id.tv_jq_state);//鉴权状态
         tv_gps_state = (TextView) findViewById(R.id.tv_gps_state);//gps状态
         tv_self_ip = (TextView) findViewById(R.id.tv_self_ip);//本机ip
+        tv_zdbh = (TextView) findViewById(R.id.tv_zdbh);//终端编号
         tv_camera_state = (TextView) findViewById(R.id.tv_camera_state);//摄像头状态
+
+        tv_ptgps_lj = (TextView) findViewById(R.id.tv_ptgps_lj);//平台gps
+        tv_ptgps_jq = (TextView) findViewById(R.id.tv_ptgps_jq);//平台gps
+        if(Params.gpsconstate==0){
+            tv_ptgps_lj.setText("未连接");
+        }else {
+            tv_ptgps_lj.setText("已连接");
+        }
+
+        if(Params.gpsjqstate==0){
+            tv_ptgps_jq.setText("未鉴权");
+        }else {
+            tv_ptgps_jq.setText("已鉴权");
+        }
 
         String ipAddress = ZdUtil.getIPAddress(context);
         if(ipAddress!=null){
             tv_self_ip.setText(ipAddress);
         }
+        tv_zdbh.setText(NettyConf.termno);
 
         int lianjie = NettyConf.constate;
         int jianquan =NettyConf.jqstate;

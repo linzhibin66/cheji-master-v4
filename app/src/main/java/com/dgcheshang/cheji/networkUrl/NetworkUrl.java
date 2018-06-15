@@ -6,8 +6,8 @@ package com.dgcheshang.cheji.networkUrl;
 
 public class NetworkUrl  {
     //public static String IP="http://192.168.0.102:8042/TcpConsole/";//外网
-    public static String IP="http://14.17.70.172:8889/TcpConsole/";//外网
-//    public static String IP="http://119.147.149.60:8889/TcpConsole/";//汕头外网
+//    public static String IP="http://14.17.70.172:8889/TcpConsole/";//外网
+    public static String IP="http://119.147.149.60:8889/TcpConsole/";//汕头外网
 
     public static String UpdateCodeUrl = IP+"tcpconsole/zdzc!androidversion.action";//版本更新
     public static String uploadExceptionUrl=IP+"tcpconsole/zdzc!uploadException.action";//异常收集路径

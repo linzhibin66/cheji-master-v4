@@ -345,11 +345,12 @@ public class GpsMsgHandle {
     public void zdzc(GpsMsgAll msgall){
         GpsZdzcR zr=(GpsZdzcR)msgall.getObject();
         if(NettyConf.debug){
-            Log.d("TAG","注册结果："+zr.getJg());
+            Log.e("TAG","Gps2-注册结果："+zr.getJg());
         }
         SharedPreferences sp = CjApplication.getInstance().getSharedPreferences("gpsjianquan", Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = sp.edit();
         if(zr.getJg()==0){
+            Log.e("TAG","鉴权码:"+zr.getAuthCode());
             //当前注册状态不是成功时接收
             if(Params.gpszcstate!=1) {
                 Params.gpszcstate = 1;
@@ -373,7 +374,8 @@ public class GpsMsgHandle {
             }else if(zr.getJg()==4){
                 msg="数据库中无该终端或没绑定车辆";
             }
-            Toast.makeText(CjApplication.getInstance(),"gps注册结果:"+msg,Toast.LENGTH_LONG).show();
+            Log.e("TAG","Gps2注册结果:"+msg);
+            Toast.makeText(CjApplication.getInstance(),"Gps2注册结果:"+msg,Toast.LENGTH_LONG).show();
         }
     }
 
@@ -384,7 +386,7 @@ public class GpsMsgHandle {
         SharedPreferences jianquan = CjApplication.getInstance().getSharedPreferences("gpsjianquan", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = jianquan.edit();
         if(cr.getJg()!=0){
-            Speaking.in("Gps鉴权失败");
+            Speaking.in("Gps2鉴权失败");
             //鉴权失败注册状态返回0
             Params.gpszcstate=0;
             Params.gpsjqstate=0;
@@ -412,13 +414,13 @@ public class GpsMsgHandle {
             //清除保存状态
             SharedPreferences jianquan = CjApplication.getInstance().getSharedPreferences("gpsjianquan", Context.MODE_PRIVATE);
             jianquan.edit().clear();
-            Speaking.in("注销成功");
+            Speaking.in("Gps2注销成功");
 
             //注销成功后注册一次
             GpsUtil.sendZdzc();
         }else {
             //注销失败
-            Speaking.in("注销失败");
+            Speaking.in("Gps2注销失败");
         }
     }
 

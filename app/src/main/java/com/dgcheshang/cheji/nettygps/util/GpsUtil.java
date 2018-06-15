@@ -37,33 +37,31 @@ import java.util.List;
 import java.util.Random;
 import java.util.Timer;
 
-/***********************************************
- * @项目名称：cheji-master-3.6 - st
- * @文件名称：GpsUtil
- * @文件描述：
- * @文件作者：joxhome
- * @创建时间：2018/5/31 10:41
- ***********************************************/
 public class GpsUtil {
 
     /**
      * 终端注册
      */
     public static void sendZdzc(){
-        if(StringUtils.isBlank(NettyConf.mobile)||StringUtils.isBlank(NettyConf.cp)||StringUtils.isBlank(NettyConf.cpys)||StringUtils.isBlank(NettyConf.shengID)||StringUtils.isBlank(NettyConf.shiID)||StringUtils.isBlank(NettyConf.host)||NettyConf.port == 0){
-            Toast.makeText(CjApplication.getInstance(),"请填写完整注册参数",Toast.LENGTH_LONG).show();
-        }else {
-            GpsZdzc zdzc = new GpsZdzc();
-            zdzc.setSxyid(NettyConf.shiID);
-            zdzc.setSyid(NettyConf.shengID);
-            zdzc.setXlh(NettyConf.zdxlh);
-            zdzc.setZdcpbz(NettyConf.cp);
-            zdzc.setZdcpys(NettyConf.cpys);
-            zdzc.setZdxh(NettyConf.model);
-            zdzc.setZzsid(NettyConf.zzsid);
-            byte[] b2 = zdzc.getZdzcbytes();
-            List<Tdata> list = GpsMsgUtilClient.generateMsg(b2, "0100", NettyConf.mobile, "0");
-            GatewayService.sendHexMsgToServer("gpsChannel", list.get(0).getData());
+        try {
+            if (StringUtils.isBlank(NettyConf.mobile) || StringUtils.isBlank(NettyConf.cp) || StringUtils.isBlank(NettyConf.cpys) || StringUtils.isBlank(NettyConf.shengID) || StringUtils.isBlank(NettyConf.shiID) || StringUtils.isBlank(NettyConf.host) || NettyConf.port == 0) {
+                Toast.makeText(CjApplication.getInstance(), "请填写完整注册参数", Toast.LENGTH_LONG).show();
+            } else {
+                GpsZdzc zdzc = new GpsZdzc();
+                zdzc.setSxyid(NettyConf.shiID);
+                zdzc.setSyid(NettyConf.shengID);
+                zdzc.setXlh(Long.toString(Long.valueOf(NettyConf.termno), 36).toUpperCase());
+                zdzc.setZdcpbz(NettyConf.cp);
+                zdzc.setZdcpys(NettyConf.cpys);
+                zdzc.setZdxh("YW3000  ");
+                zdzc.setZzsid(NettyConf.zzsid);
+                byte[] b2 = zdzc.getZdzcbytes();
+                List<Tdata> list = GpsMsgUtilClient.generateMsg(b2, "0100", NettyConf.mobile, "0");
+                Log.e("TAG",list.get(0).getData());
+                GatewayService.sendHexMsgToServer("gpsChannel", list.get(0).getData());
+            }
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -112,8 +110,8 @@ public class GpsUtil {
 
             GpsGnssExtend ge = new GpsGnssExtend();
             SharedPreferences sp = CjApplication.getInstance().getSharedPreferences("gpscommon", Context.MODE_PRIVATE);
-            ge.setLc(sp.getInt("zlc",0));
-            ge.setSd((short)(10*Short.valueOf(getSpeed())));
+            ge.setLc(sp.getInt("zlc",0)/100);
+            ge.setSd((short)(Double.valueOf(getSpeed())*10));
             gnss.setFjxx(ByteUtil.bytesToHexString(ge.getGnssExtendBytes()));
 
             byte[] bs = gnss.getGnssBytes();
@@ -124,9 +122,6 @@ public class GpsUtil {
 
     public static byte[] getStringBytes(String s){
         byte[] bs=s.getBytes();
-        byte[] temp=new byte[1];
-        temp[0]=0;
-        bs= ByteUtil.byteMerger(bs, temp);
         return bs;
     }
 

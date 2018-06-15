@@ -283,6 +283,29 @@ public class GpsByteToCls {
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
+			if(sbody.length>22){
+				temp= ByteUtil.subBytes(sbody, 22, 12);
+				hs= ByteUtil.bytesToHexString(temp);
+				hs= ByteUtil.clearHexStringfront(hs);
+				temp= ByteUtil.hexStringToByte(hs);
+				try {
+					deviceInfo.setModel(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+
+				temp= ByteUtil.subBytes(sbody, 34, 12);
+				hs= ByteUtil.bytesToHexString(temp);
+				hs= ByteUtil.clearHexStringfront(hs);
+				temp= ByteUtil.hexStringToByte(hs);
+				try {
+					deviceInfo.setTermno(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			}
+
+
 		}
 		return deviceInfo;
 	}

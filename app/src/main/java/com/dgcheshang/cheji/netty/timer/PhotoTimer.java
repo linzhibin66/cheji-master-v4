@@ -3,6 +3,7 @@ package com.dgcheshang.cheji.netty.timer;
 import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.util.ZdUtil;
 
+import java.util.Timer;
 import java.util.TimerTask;
 
 public class PhotoTimer extends TimerTask{
@@ -11,7 +12,9 @@ public class PhotoTimer extends TimerTask{
 	@Override
 	public void run() {
 		if(ZdUtil.pdGps()&& NettyConf.xystate==1) {
-			ZdUtil.sendZpsc("129", "0", "5");
+
+            ZdUtil.sendZpsc("129", "0", "5");
+
 		}else{
 			this.cancel();
 		}

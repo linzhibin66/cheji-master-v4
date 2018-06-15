@@ -31,22 +31,25 @@ public class GpsClientHandler extends SimpleChannelInboundHandler {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		Log.e("TAG","连接异常！");
+		Log.e("TAG","Gps2-连接异常！");
+		cause.printStackTrace();
 		super.exceptionCaught(ctx, cause);
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		super.channelActive(ctx);
-		Log.e("TAG","终端连接服务器激活成功");
+		Log.e("TAG","Gps2-终端连接服务器激活成功");
 		GatewayService.addGatewayChannel("gpsChannel",ctx);
 		Params.gpsconstate=1;
 
 		if(Params.gpszcstate==0){
 			//没注册过注册
+			Log.e("TAG","GPS注册");
 			GpsUtil.sendZdzc();
 		}else{
 			//发送终端鉴权
+			Log.e("TAG","GPS鉴权");
 			GpsUtil.sendZdjqHex();
 		}
 
@@ -59,7 +62,7 @@ public class GpsClientHandler extends SimpleChannelInboundHandler {
 			IdleStateEvent event = (IdleStateEvent) evt;
 			if (event.state() == IdleState.READER_IDLE){
 				if(NettyConf.debug){
-					Log.e("TAG","90秒内没收到任何回复包括心跳回复");
+					Log.e("TAG","Gps2-90秒内没收到任何回复包括心跳回复");
 				}
 				ctx.close();
 
@@ -89,8 +92,8 @@ public class GpsClientHandler extends SimpleChannelInboundHandler {
 		GatewayService.removeGatewayChannel("gpsChannel");
 		Params.gpsconstate=0;
 		Params.gpsjqstate=0;
-		Log.e("TAG","断开连接重连！");
-		new Timer().schedule(new GpsConTask(),3000);
+		Log.e("TAG","Gps2-断开连接重连！");
+		new Timer().schedule(new GpsConTask(),30*1000);
 	}
 
 	@Override

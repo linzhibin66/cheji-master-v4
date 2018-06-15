@@ -15,6 +15,7 @@ import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.conf.SetZdcs;
 import com.dgcheshang.cheji.netty.timer.InitTimer;
 import com.dgcheshang.cheji.netty.timer.XsjlTimer;
+import com.dgcheshang.cheji.nettygps.conf.Params;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -50,9 +51,6 @@ public class InitUtil {
         String xlh=android.os.Build.SERIAL;
         String mf = Build.MANUFACTURER;//制造商
         String simSn = tm.getSimSerialNumber();
-        if(NettyConf.debug){
-            Log.e("TAG","IMEI="+IMEI+",电话号码="+line1Number+",model ="+model+",zzsid ="+mf+",序列号="+xlh+"---"+simSn);
-        }
 
         if(StringUtils.isNotEmpty(model)) {
             NettyConf.model = model;
@@ -138,6 +136,10 @@ public class InitUtil {
         String dzwllxsj=zdcssp.getString("0010", "5");
         String sbtype = zdcssp.getString("sbtype", "1");//识别类型 1指纹识别 4人脸识别
         String have_zw = zdcssp.getString("have_zw", "0");//是否有指纹识别,0未检测，1有，2没有
+        String termno= zdcssp.getString("termno", "0");
+        String gps_ip = zdcssp.getString("0017", "59.37.17.67");//gps_ip
+        String gps_duankou = zdcssp.getString("0019", "13010");//gps端口
+        String rlsbnumb = zdcssp.getString("0042", "94");//人像识别对比阈值0-100
         NettyConf.have_zw=have_zw;
         NettyConf.sbtype=sbtype;
 
@@ -148,7 +150,12 @@ public class InitUtil {
         NettyConf.shengID=shengID;
         NettyConf.shiID=shiID;
         NettyConf.mobile=phone;
+        NettyConf.termno=termno;
 
+        Params.gpshost=gps_ip;
+        Params.gpsport=Integer.valueOf(gps_duankou);
+
+        NettyConf.rlsb_jd=Integer.valueOf(rlsbnumb);
         NettyConf.xtjg=Integer.valueOf(xtjg);//心跳间隔
         NettyConf.cfjg=Integer.valueOf(cfjg);//重发间隔
         NettyConf.cfcs=Integer.valueOf(cfcs);//重传次数
@@ -171,7 +178,7 @@ public class InitUtil {
         //应用参数设置
         SharedPreferences yycssp = CjApplication.getInstance().getSharedPreferences("yycs", Context.MODE_PRIVATE);
         String makephotojg=yycssp.getString("1","15");
-        NettyConf.makephotojg=Integer.parseInt("2")*60;//拍照发送间隔时间
+        NettyConf.makephotojg=Integer.parseInt("15")*60;//拍照发送间隔时间
         String cxyzsj=yycssp.getString("7","30");
         NettyConf.cxyzsj=Integer.parseInt(cxyzsj);
         NettyConf.dwfsjg3=Integer.valueOf(yycssp.getString("5","3600"));
@@ -198,7 +205,7 @@ public class InitUtil {
         String jrxs=stusp.getString("jrxs","0");
         int fzpxjlsc=stusp.getInt("fzpxjlsc",0);
         boolean sendState = stusp.getBoolean("sendState", true);
-        String stu_pic = stusp.getString("stu_pic", "");//学员照片路径
+        String stu_pic = stusp.getString("stuphoto", "");//学员照片路径
         NettyConf.student_pic=stu_pic;
         NettyConf.sendState=sendState;
         if(!xybh.equals("")){

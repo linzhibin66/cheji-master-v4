@@ -5,6 +5,7 @@
     <dimen name="textsize">23sp</dimen>
     <dimen name="textsize_22">22sp</dimen>
     <dimen name="textsize_20">20sp</dimen>
+    <dimen name="textsize_19">19sp</dimen>
     <dimen name="textsize_18">18sp</dimen>
     <dimen name="textsize_16">16sp</dimen>
     <dimen name="textsize_15">15sp</dimen>

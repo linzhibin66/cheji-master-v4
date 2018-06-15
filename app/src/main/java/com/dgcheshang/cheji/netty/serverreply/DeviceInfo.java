@@ -12,6 +12,10 @@ public class DeviceInfo implements Serializable{
 	private String mobile;
 	private String cp;
 	private String cpys;
+	private String model;//型号
+	private String termno;//终端编号，转36进制可转成序列号
+	private String syid;//省域ID
+	private String sxyid;//市县域ID
 
 	public int getRs() {
 		return rs;
@@ -38,6 +42,38 @@ public class DeviceInfo implements Serializable{
 	}
 	public void setCpys(String cpys) {
 		this.cpys = cpys;
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
+	}
+
+	public String getTermno() {
+		return termno;
+	}
+
+	public void setTermno(String termno) {
+		this.termno = termno;
+	}
+
+	public String getSyid() {
+		return syid;
+	}
+
+	public void setSyid(String syid) {
+		this.syid = syid;
+	}
+
+	public String getSxyid() {
+		return sxyid;
+	}
+
+	public void setSxyid(String sxyid) {
+		this.sxyid = sxyid;
 	}
 
 	public byte[] getDeviceInfoBytes(){

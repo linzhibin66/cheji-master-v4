@@ -46,17 +46,11 @@ public class RlsbUtil {
 
     public static boolean delete(String fileName) {
         File file = new File(fileName);
-        if (!file.exists()) {
-            return false;
+        if (file.exists()) {
+            return file.delete();
+
         } else {
-            if (file.isFile()) {
-
-                return  file.delete();
-
-
-            }else {
-                return false;
-            }
+            return false ;
         }
     }
 
