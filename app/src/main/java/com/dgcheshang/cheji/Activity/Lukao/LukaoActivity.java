@@ -52,6 +52,7 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
     BroadcastReceiver receiver;//下载广播
     String zippath="/mnt/sdcard/chejidoal/chejimusic.zip";//下载后语音保存全路径
     Dialog loading;
+    boolean isback=true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +60,9 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
         initView();
     }
 
+    /**
+     * 初始化布局
+     * */
     private void initView() {
         final SharedPreferences lukaosp = getSharedPreferences("lukao", Context.MODE_PRIVATE);
         View layout_light = findViewById(R.id.layout_light);//灯光训练
@@ -94,7 +98,6 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
             }else {
                 Toast.makeText(context,"暂无网络，无法下载语音文件",Toast.LENGTH_SHORT).show();
             }
-
         }
 
         //开启路考选项监听
@@ -163,8 +166,8 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
                 intent.putExtra("list", lukaoname);
                 intent.putExtra("imagelist",imageDenguang);
                 startActivity(intent);
-
                 break;
+
             case R.id.layout_gather://路线采集
                 intent.setClass(context,LukaoGatherActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -172,6 +175,7 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
                 intent.putExtra("imagerichang",imagerichang);
                 startActivity(intent);
                 break;
+
             case R.id.layout_change://路线管理
                 intent.setClass(context,LukaoChangeActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -213,11 +217,11 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
         return true;
     }
 
-
     /**
      * 下载语音文件
      * */
     public void downFile(String url) {
+        isback=false;
         loading = LoadingDialogUtils.createLoadingDialog(context, "语音初始化中...");
         loading.setCancelable(false);//设置不能按返回键取消
         File destDir = new File("/cdcard/chejidoal");
@@ -234,48 +238,49 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
             }
             destDir.mkdirs();
         }
-        final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse(url);
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        // 设置下载路径和文件名
-        request.setDestinationInExternalPublicDir("chejidoal", "chejimusic.zip");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        request.setDescription("语音文件正在下载");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        try {
+            final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(url);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            // 设置下载路径和文件名
+            request.setDestinationInExternalPublicDir("chejidoal", "chejimusic.zip");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
+            request.setDescription("语音文件正在下载");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 //        request.setMimeType("application/vnd.android.package-archive");
-        request.setAllowedOverRoaming(false);
-        // 设置为可被媒体扫描器找到
-        request.allowScanningByMediaScanner();
-        // 设置为可见和可管理
-        request.setVisibleInDownloadsUi(true);
-        // 获取此次下载的ID
-        final long refernece = dManager.enqueue(request);
+            request.setAllowedOverRoaming(false);
+            // 设置为可被媒体扫描器找到
+            request.allowScanningByMediaScanner();
+            // 设置为可见和可管理
+            request.setVisibleInDownloadsUi(true);
+            // 获取此次下载的ID
+            final long refernece = dManager.enqueue(request);
 
-        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+            IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
 
-        receiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (refernece == myDwonloadID) {
-//                                Intent install = new Intent(Intent.ACTION_VIEW);
-//                                Uri downloadFileUri = dManager.getUriForDownloadedFile(refernece);
-//                                install.setDataAndType(downloadFileUri, "application/vnd.android.package-archive");
-//                                install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                                startActivity(install);
+            receiver = new BroadcastReceiver() {
+                public void onReceive(Context context, Intent intent) {
+                    long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                    if (refernece == myDwonloadID) {
 
-                    Unzip(zippath, "/sdcard/chejidoal/");//解压zip文件
+                        Unzip(zippath, "/sdcard/chejidoal/");//解压zip文件
 
+                    }
                 }
-            }
-        };
-        registerReceiver(receiver, filter);
+            };
+            registerReceiver(receiver, filter);
+        }catch (Exception ex){
+            loading.cancel();
+            Toast.makeText(context,"语音文件下载失败",Toast.LENGTH_SHORT).show();
+            isback=true;
+        }
+
     }
 
     /**
      * 解压语音文件
      * zipFile要解压的文件全路径/mnt/sdcard/chejidoal/chejimusic.zip
      * targetDir解压后保存的路径/mnt/sdcard/chejidoal/
-     *
      * */
     public  void Unzip(String zipFile, String targetDir) {
         int BUFFER = 4096; //这里缓冲区我们使用4KB，
@@ -311,6 +316,7 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
             //解压完后删除zip文件
             delFile(zipFile);
             loading.cancel();
+            isback=true;
         } catch (Exception cwj) {
             cwj.printStackTrace();
         }
@@ -365,15 +371,18 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
         NettyConf.xltimer.schedule(lineTask,0,1000);
     }
 
-
     /**
-     * 禁用返回键
+     * 返回键监听
      * */
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            return true;
+            if(isback==true){
+                finish();
+            }
+            return false;
+        }else {
+            return super.onKeyDown(keyCode, event);
         }
-        return false;
     }
 
 }

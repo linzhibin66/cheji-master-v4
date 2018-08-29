@@ -46,6 +46,9 @@
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
+    <!-- bugly异常上报权限 -->
+    <uses-permission android:name="android.permission.READ_LOGS" />
+
     <application
         android:name=".CjApplication"
         android:allowBackup="true"
@@ -68,6 +71,8 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".Tools.VoipFloatService" />
+        <service android:name=".service.GpsService" />
         <!-- 连接IP -->
         <activity
             android:name=".Activity.MainActivity"
@@ -145,9 +150,11 @@
             android:name=".Activity.Lukao.StartExamActivity"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateHidden|stateUnchanged" />
-
-        <activity android:name=".Activity.ValidTimeActivity"
-            android:screenOrientation="landscape"></activity>
+        <activity
+            android:name=".Activity.ValidTimeActivity"
+            android:screenOrientation="landscape" />
+        <activity android:name=".Activity.LoginSmActivity" />
+        <activity android:name=".Activity.LoginPhoneActivity"></activity>
     </application>
 
 </manifest>

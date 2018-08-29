@@ -541,7 +541,10 @@ public class MsgHandle {
                     Params.gpsport=Integer.valueOf(value);
                 }else if("0042".equals(id)){
                     //人脸识别阈值
-                    NettyConf.rlsb_jd=Integer.valueOf(value);
+                    NettyConf.thd=Float.valueOf(value);
+                }else if("0043".equals(id)){
+                    //设置验证读取IC卡与服务端获取信息。
+                    NettyConf.yz_ICcard=Integer.parseInt(value);
                 }
             }
             edit.commit();
@@ -1073,6 +1076,33 @@ public class MsgHandle {
             msg.setData(bundle);
             Handler handler = (Handler) NettyConf.handlersmap.get("logincoach");
             handler.sendMessage(msg);
+        }else if(NettyConf.handlersmap.get("smlogin")!=null){
+            //扫码页面
+            MsgExtend me = (MsgExtend) msgAll.getObject();
+            JlydlR jr = (JlydlR) me.getO();
+            if (NettyConf.debug) {
+                Log.e("TAG", "教练员登录结果:" + jr.getJg());
+            }
+            Message msg = new Message();
+            msg.arg1 = 1;
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("jldlr", jr);
+            msg.setData(bundle);
+            Handler handler = (Handler) NettyConf.handlersmap.get("smlogin");
+            handler.sendMessage(msg);
+        }else if(NettyConf.handlersmap.get("phonelogin")!=null){
+            MsgExtend me = (MsgExtend) msgAll.getObject();
+            JlydlR jr = (JlydlR) me.getO();
+            if (NettyConf.debug) {
+                Log.e("TAG", "教练员登录结果:" + jr.getJg());
+            }
+            Message msg = new Message();
+            msg.arg1 = 1;
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("jldlr", jr);
+            msg.setData(bundle);
+            Handler handler = (Handler) NettyConf.handlersmap.get("phonelogin");
+            handler.sendMessage(msg);
         }
     }
 
@@ -1121,6 +1151,35 @@ public class MsgHandle {
             bundle.putSerializable("xydlr", xydlr);
             msg.setData(bundle);
             Handler handler = (Handler) NettyConf.handlersmap.get("loginstudent");
+            handler.sendMessage(msg);
+        }else if(NettyConf.handlersmap.get("smlogin")!=null){
+            MsgExtend me = (MsgExtend) msgAll.getObject();
+            XydlR xydlr = (XydlR) me.getO();
+            if (NettyConf.debug) {
+                Log.e("TAG", "学员登录结果:" + xydlr.getJg());
+                Log.e("TAG", "学员登录附加信息:" + xydlr.getFjxx());
+            }
+            Message msg = new Message();
+            /*if (xydlr.getSfbd() == 1) {
+                new Speaking().Speaking(xydlr.getFjxx().split(",")[0]);
+            }*/
+            msg.arg1 = 2;
+            //传递xydl
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("xydlr", xydlr);
+            msg.setData(bundle);
+            Handler handler = (Handler) NettyConf.handlersmap.get("smlogin");
+            handler.sendMessage(msg);
+        }else if(NettyConf.handlersmap.get("phonelogin")!=null){
+            MsgExtend me = (MsgExtend) msgAll.getObject();
+            XydlR xydlr = (XydlR) me.getO();
+            Message msg = new Message();
+            msg.arg1 = 2;
+            //传递xydl
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("xydlr", xydlr);
+            msg.setData(bundle);
+            Handler handler = (Handler) NettyConf.handlersmap.get("phonelogin");
             handler.sendMessage(msg);
         }
     }
@@ -1250,20 +1309,40 @@ public class MsgHandle {
             //保存入数据库
             Message msg=new Message();
             msg.arg1=5;
-            if(sr.getLx()==1){
+            if(sr.getLx()==1&&NettyConf.jlstate==0){
                 //教练员信息
                 Bundle bundle = new Bundle();
-                bundle.putSerializable("jlxx",sr);
+                bundle.putSerializable("sfxx",sr);
                 msg.setData(bundle);
-                Handler handler = (Handler) NettyConf.handlersmap.get("logincoach");
-                handler.sendMessage(msg);
-            }else if(sr.getLx()==4){
+                if(NettyConf.logintype_coach==1){
+                    //人脸识别
+                    Handler handler = (Handler) NettyConf.handlersmap.get("logincoach");
+                    handler.sendMessage(msg);
+                }else if(NettyConf.logintype_coach==2||NettyConf.logintype_coach==4){
+                    //扫二维码
+                    Handler handler = (Handler) NettyConf.handlersmap.get("smlogin");
+                    handler.sendMessage(msg);
+                }else if(NettyConf.logintype_coach==3){
+                    //手机登录
+                    Handler handler = (Handler) NettyConf.handlersmap.get("phonelogin");
+                    handler.sendMessage(msg);
+                }
+
+            }else if(sr.getLx()==4&&NettyConf.xystate==0){
                 //学员信息
                 Bundle bundle = new Bundle();
-                bundle.putSerializable("xyxx",sr);
+                bundle.putSerializable("sfxx",sr);
                 msg.setData(bundle);
-                Handler handler = (Handler) NettyConf.handlersmap.get("loginstudent");
-                handler.sendMessage(msg);
+                if(NettyConf.logintype_stu==1){
+                    Handler handler = (Handler) NettyConf.handlersmap.get("loginstudent");
+                    handler.sendMessage(msg);
+                }else if(NettyConf.logintype_stu==2||NettyConf.logintype_stu==4){
+                    Handler handler = (Handler) NettyConf.handlersmap.get("smlogin");
+                    handler.sendMessage(msg);
+                }else if(NettyConf.logintype_stu==3){
+                    Handler handler = (Handler) NettyConf.handlersmap.get("phonelogin");
+                    handler.sendMessage(msg);
+                }
             }
         }else{
             Speaking.in("无效卡");

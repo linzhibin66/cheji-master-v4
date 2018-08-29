@@ -17,6 +17,8 @@ public class DeviceInfo implements Serializable{
 	private String syid;//省域ID
 	private String sxyid;//市县域ID
 
+	private String cjh;//车架号
+
 	public int getRs() {
 		return rs;
 	}
@@ -58,6 +60,14 @@ public class DeviceInfo implements Serializable{
 
 	public void setTermno(String termno) {
 		this.termno = termno;
+	}
+
+	public String getCjh() {
+		return cjh;
+	}
+
+	public void setCjh(String cjh) {
+		this.cjh = cjh;
 	}
 
 	public String getSyid() {

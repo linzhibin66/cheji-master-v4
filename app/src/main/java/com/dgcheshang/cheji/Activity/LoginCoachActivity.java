@@ -57,6 +57,7 @@ import com.dgcheshang.cheji.netty.timer.FrinterTimer;
 import com.dgcheshang.cheji.netty.timer.LoadingTimer;
 import com.dgcheshang.cheji.netty.tools.fingerprint.BaseInitTask;
 import com.dgcheshang.cheji.netty.util.ByteUtil;
+import com.dgcheshang.cheji.netty.util.CardContent;
 import com.dgcheshang.cheji.netty.util.ForwardUtil;
 import com.dgcheshang.cheji.netty.util.MsgUtilClient;
 import com.dgcheshang.cheji.netty.util.RlsbUtil;
@@ -76,8 +77,10 @@ import com.serenegiant.widget.UVCCameraTextureView;
 import com.shenyaocn.android.Encoder.CameraRecorder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.util.EncodingUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -131,42 +134,60 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
     private OutputStream snapshotOutStreamL;		// 用于左边摄像头拍照
     private String snapshotFileNameL;
 
-    private OutputStream snapshotOutStreamR;		// 用于右边摄像头拍照
-    private String snapshotFileNameR;
-    private UVCCameraTextureView mUVCCameraViewR;	// 用于右边摄像头预览
-    private Surface mRightPreviewSurface;
-
     private UVCCameraTextureView mUVCCameraViewL;	// 用于左边摄像头预览
     private Surface mLeftPreviewSurface;
     private static final int PREVIEW_WIDTH = 320;
     private static final int PREVIEW_HEIGHT = 240;
     private static final boolean DEBUG = true;
     private CameraRecorder mp4RecorderL=new CameraRecorder(1);
-    private CameraRecorder mp4RecorderR=new CameraRecorder(2);
     private int currentWidth = UVCCamera.DEFAULT_PREVIEW_WIDTH;
     private int currentHeight = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
     public String landmarks_path, facenet_path, train_path;
-    GreenRect leftRect;
     ArrayList<Rect> rectArrayList = null;
+    CardContent cardcontent;
     boolean isback=true;//是否可按返回键
-//    List<FD_FSDKFace> faceResult = new ArrayList<>();
     Handler handler=new  Handler(){
         @Override
         public void handleMessage(Message msg) {
-            if(msg.arg1==1){//教练登录
+            if(msg.arg1==1){
+                //教练登录
                 image_shenfen.setBackgroundResource(R.mipmap.login_ok_y);
                 handleIn(msg);
-            }else if(msg.arg1==2){//教练员登出
+            }else if(msg.arg1==2){
+                //教练员登出
                 Bundle data = msg.getData();
                 JlydcR jldcr = (JlydcR) data.getSerializable("jlydcr");//教练登录成功后返回来的数据
                 handleOut(jldcr);
-            }else if(msg.arg1==5){//获取教练信息
+            }else if(msg.arg1==5){
+                //从服务器获取教练信息
                 Bundle data = msg.getData();
-                jlxx = (SfrzR) data.getSerializable("jlxx");
-//                jlxx.setXx("http://192.168.0.111:8092/lin.jpg");
-                getJlxx(jlxx);
-            }else if(msg.arg1==6){//uid
+                jlxx = (SfrzR) data.getSerializable("sfxx");
+                //验证IC卡信息判断
+                if(NettyConf.yz_ICcard==0){
+                    //不验证IC卡
+                    getJlxx(jlxx);
+                } else if(NettyConf.yz_ICcard==1){
+                    //验证IC卡但不执行
+                    if(jlxx.getCx().equals(cardcontent.getCx())&&jlxx.getTybh().equals(cardcontent.getTybh())&&jlxx.getSfzh().equals(cardcontent.getZjhm())&&jlxx.getXm().equals(cardcontent.getXm())){
+
+                    }else {
+                        Speaking.in("教练信息不匹配");
+                    }
+                    getJlxx(jlxx);
+                }else if(NettyConf.yz_ICcard==2){
+                    //验证IC卡
+                    if(jlxx.getCx().equals(cardcontent.getCx())&&jlxx.getTybh().equals(cardcontent.getTybh())&&jlxx.getSfzh().equals(cardcontent.getZjhm())&&jlxx.getXm().equals(cardcontent.getXm())){
+                        getJlxx(jlxx);
+                    }else {
+                        Speaking.in("教练信息不匹配");
+                    }
+                }
+
+            }else if(msg.arg1==6){
+                //刷卡成功返回uid
                 String jluid = msg.getData().getString("jluid");
+                //返回读卡信息内容
+                cardcontent = (CardContent) msg.getData().get("cardcontent");
                 image_shuaka.setBackgroundResource(R.mipmap.login_rid_jlcard_y);
 
                 String sql="select * from tsfrz where uuid=? and lx=?";
@@ -181,7 +202,27 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                     }
                 }else{
                     jlxx=list.get(0);
-                    getJlxx(jlxx);
+                    //验证IC卡信息判断
+                    if(NettyConf.yz_ICcard==0){
+                        //不验证IC卡
+                        getJlxx(jlxx);
+                    } else if(NettyConf.yz_ICcard==1){
+                        //验证IC卡但不执行
+                        if(jlxx.getCx().equals(cardcontent.getCx())&&jlxx.getTybh().equals(cardcontent.getTybh())&&jlxx.getSfzh().equals(cardcontent.getZjhm())&&jlxx.getXm().equals(cardcontent.getXm())){
+
+                        }else {
+                            Speaking.in("教练信息不匹配");
+                        }
+                        getJlxx(jlxx);
+                    }else if(NettyConf.yz_ICcard==2){
+                        //验证IC卡
+                        if(jlxx.getCx().equals(cardcontent.getCx())&&jlxx.getTybh().equals(cardcontent.getTybh())&&jlxx.getSfzh().equals(cardcontent.getZjhm())&&jlxx.getXm().equals(cardcontent.getXm())){
+                            getJlxx(jlxx);
+                        }else {
+                            Speaking.in("教练信息不匹配");
+                        }
+                    }
+
                 }
             }else if(msg.arg1==7){
                 //指纹验证成功返回登录
@@ -280,6 +321,7 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
         TextView tv_coachzj = (TextView) findViewById(R.id.tv_coachzj);//证件号码
         TextView tv_cartype = (TextView) findViewById(R.id.tv_cartype);//车牌类型
         TextView tv_coachname = (TextView) findViewById(R.id.tv_coachname);//教练姓名
+        TextView tv_logintime = (TextView) findViewById(R.id.tv_logintime);//登录时间
         image_coach = (ImageView) findViewById(R.id.image_coach);//教练证件照
         View layout_qzout = findViewById(R.id.layout_qzout);//强制登出
         //判断是否教练登录过
@@ -288,12 +330,13 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
             layout_coachout.setVisibility(View.VISIBLE);
             layout_qzout.setVisibility(View.VISIBLE);
             tv_title.setText("教练员管理");
+            //显示教练照片
             showCoachPhoto();
             tv_coachcode.setText(NettyConf.jbh);
             tv_cartype.setText(NettyConf.cx);
             tv_coachzj.setText(NettyConf.jzjhm);
-            String jlxm = coachsp.getString("jlxm", "");
-            tv_coachname.setText(jlxm);
+            tv_coachname.setText(coachsp.getString("jlxm", ""));
+            tv_logintime.setText(coachsp.getString("logintime1",""));
 
         }else {//没登录
             layout_coachin.setVisibility(View.VISIBLE);
@@ -329,16 +372,21 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 finish();
                 break;
 
-            case R.id.bt_coachout://登出
+            case R.id.bt_coachout://登出按钮
                 if(!ZdUtil.ispz){
                     if (NettyConf.xystate==1){
                         Toast.makeText(context,"请先登出学员！",Toast.LENGTH_SHORT).show();
                     }else {
-                        if(NettyConf.sbtype.equals("1")){
-                            //指纹识别
-                            loading = LoadingDialogUtils.createLoadingDialog(context, "教练登出中(请验证指纹)...");
+
+                        if(NettyConf.logintype_coach==1){
+                            //人脸登出方式
+                            coachOut();
+                        }else if(NettyConf.logintype_coach==2||NettyConf.logintype_coach==4||NettyConf.logintype_coach==3){
+                            //扫码登出方式
+                            loading = LoadingDialogUtils.createLoadingDialog(context, "教练登出中...");
+                            ZdUtil.coachOut1();
                         }
-                        coachOut();
+
                     }
                 }else {
                     Toast.makeText(context,",正在拍照请稍后操作",Toast.LENGTH_SHORT).show();
@@ -350,8 +398,6 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 break;
         }
     }
-
-
 
     /**
      * 教练登录
@@ -435,7 +481,6 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 Speaking.in("教练员登出数据异常");
             }
         }
-
     }
 
     /**
@@ -448,7 +493,6 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
         timer.schedule(loadingTimer, NettyConf.controltime);
             ZdUtil.qzCoachOut();
     }
-
 
     private void coachOut2() {
         try {
@@ -497,7 +541,9 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 editor.putString("jzjhm", NettyConf.jzjhm);//证件号码
                 editor.putString("jlxm", jlxx.getXm());//教练姓名
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");//保存年月日
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//保存年月日
                 editor.putString("logintime",sdf.format(new Date(System.currentTimeMillis())));
+                editor.putString("logintime1",sdf1.format(new Date(System.currentTimeMillis())));
                 editor.commit();//提交修改
                 NettyConf.jlstate = 1;
                 //上传拍照数据
@@ -561,43 +607,43 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
      * 读卡成功后获取教练信息
      * */
     public void getJlxx(final SfrzR jlxx){
-        String xx = jlxx.getXx();//教练指纹
-        NettyConf.cx = jlxx.getCx();//车型
-        NettyConf.jbh = jlxx.getTybh();//统一编号
-        NettyConf.jzjhm = jlxx.getSfzh();//身份证号
-        tv_shenfen.setText(jlxx.getSfzh());
-        tv_chexin.setText(jlxx.getCx());
-        tv_jlbh.setText(jlxx.getTybh());
-        tv_coach_name.setText(jlxx.getXm());
-        //获取信息成功后显示身份信息
-        layout_shenfen.setVisibility(View.VISIBLE);
-        if(StringUtils.isNotEmpty(xx)) {
-            mRFID.free();
-            if(NettyConf.cardtimer!=null){
-                NettyConf.cardtimer.cancel();
-                NettyConf.cardtimer=null;
-            }
-
-            //判断选择指纹识别还是人脸识别
-            if(NettyConf.sbtype.equals("1")){
-                //指纹识别
-                commonCoach(xx,"jlcard");
-            }else {
-                //人脸识别
-                if(ZdUtil.ispz==false){
-                    commonCoach2(jlxx,"login");
-                }else {
-                    Toast.makeText(context,"正在拍照，请稍后...",Toast.LENGTH_SHORT).show();
+            String xx = jlxx.getXx();//教练指纹
+            NettyConf.cx = jlxx.getCx();//车型
+            NettyConf.jbh = jlxx.getTybh();//统一编号
+            NettyConf.jzjhm = jlxx.getSfzh();//身份证号
+            tv_shenfen.setText(jlxx.getSfzh());
+            tv_chexin.setText(jlxx.getCx());
+            tv_jlbh.setText(jlxx.getTybh());
+            tv_coach_name.setText(jlxx.getXm());
+            //获取信息成功后显示身份信息
+            layout_shenfen.setVisibility(View.VISIBLE);
+            if (StringUtils.isNotEmpty(xx)) {
+                mRFID.free();
+                if (NettyConf.cardtimer != null) {
+                    NettyConf.cardtimer.cancel();
+                    NettyConf.cardtimer = null;
                 }
 
-            }
+                //判断选择指纹识别还是人脸识别
+                if (NettyConf.sbtype.equals("1")) {
+                    //指纹识别
+                    commonCoach(xx, "jlcard");
+                } else {
+                    //人脸识别
+                    if (ZdUtil.ispz == false) {
+                        commonCoach2(jlxx, "login");
+                    } else {
+                        Toast.makeText(context, "正在拍照，请稍后...", Toast.LENGTH_SHORT).show();
+                    }
 
-        }else{
-            //验证成功返回登录
-            image_zhiwen.setBackgroundResource(R.mipmap.login_fingerprint_y);
-            loading = LoadingDialogUtils.createLoadingDialog(context, "正在登录...");
-            coachLogin();
-        }
+                }
+
+            } else {
+                //验证成功返回登录
+                image_zhiwen.setBackgroundResource(R.mipmap.login_fingerprint_y);
+                loading = LoadingDialogUtils.createLoadingDialog(context, "正在登录...");
+                coachLogin();
+            }
     }
 
     /**
@@ -616,7 +662,6 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 }else {
                     Toast.makeText(context,"正在拍照，请稍后...",Toast.LENGTH_SHORT).show();
                 }
-
             }
 
         }else{
@@ -674,7 +719,9 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
             @Override
             public void run() {
                 String xx = jlxx.getXx();
-                xx=new String(ByteUtil.hexStringToByte(xx));
+
+//                xx=new String(ByteUtil.hexStringToByte(xx));
+
                 Log.e("TAG","教练下载图片路径："+xx);
                 String sfzh = jlxx.getSfzh();
                 //判断文件夹是否存在
@@ -685,8 +732,8 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                     //没有教练照片去下载
                     downFile(xx,sfzh,jlzp,type);
                 }else {
-                    //有教练照片直接抓拍验证
-                    rlsb(jlzp,sfzh, type);
+                    //有教练照片直接抓拍验证,传“have_pic”状态
+                    rlsb(jlzp,sfzh, type,true);
                 }
             }
         };
@@ -1008,7 +1055,9 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
         }
     };
 
-    // 左边摄像头的NV21视频帧回调
+    /**
+     * 左边摄像头的NV21视频帧回调
+     * */
     private final IFrameCallback mUVCFrameCallbackL = new IFrameCallback() {
         @Override
         public void onFrame(final ByteBuffer frame) {
@@ -1046,7 +1095,9 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
     };
 
 
-    // 刷新UI控件状态
+    /**
+     * 刷新摄像头UI控件状态
+     * */
     private void refreshControls() {
         try {
             findViewById(R.id.textViewUVCPromptL).setVisibility(mUVCCameraL != null ? View.GONE : View.VISIBLE);
@@ -1059,6 +1110,10 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
      * 判断文件是否存在并保存比对原照片
      * */
     public boolean isfiled(String mageurl,String name){
+        if (faceResult.size() > 0) {
+            faceResult.clear();
+        }
+
         File file = new File(mageurl);
         if (file.exists()&&file.length() > 0) {
             boolean ret = FaceDet.FD_FSDK_FaceDetection(mageurl, faceResult);
@@ -1066,7 +1121,7 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
             if(ret==true){
                 //成功获取轮廓并保存
                 boolean mIsSave = FaceDet.CaptureFaceMuti(mageurl, name);
-                Log.e("TAG","保存原始照片结果=" + ret);
+                Log.e("TAG","保存原始照片结果=" + mIsSave);
 
                 return true;
             }else {
@@ -1083,26 +1138,27 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
     public void downFile(String url, final String sfzh, final String jlzp, final String type){
 
         //下载文件
-        final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse(url);
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        // 设置下载路径和文件名
-        request.setDestinationInExternalPublicDir("jlypic", sfzh+".jpg");
-        request.setMimeType("application/vnd.android.package-archive");
-        request.setAllowedOverRoaming(false);
-        // 设置为可被媒体扫描器找到
-        request.allowScanningByMediaScanner();
-        // 设置为可见和可管理
-        request.setVisibleInDownloadsUi(true);
-        // 获取此次下载的ID
-        final long refernece = dManager.enqueue(request);
+        try {
+            final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(url);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            // 设置下载路径和文件名
+            request.setDestinationInExternalPublicDir("jlypic", sfzh+".jpg");
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setAllowedOverRoaming(false);
+            // 设置为可被媒体扫描器找到
+            request.allowScanningByMediaScanner();
+            // 设置为可见和可管理
+            request.setVisibleInDownloadsUi(true);
+            // 获取此次下载的ID
+            final long refernece = dManager.enqueue(request);
 
-        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+            IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
 
-        receiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                //下载状态查询
+            receiver = new BroadcastReceiver() {
+                public void onReceive(Context context, Intent intent) {
+                    long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                    //下载状态查询
 //                DownloadManager.Query query = new DownloadManager.Query().setFilterById(refernece);
 //                Cursor c = dManager.query(query);if (c != null && c.moveToFirst()) {
 //                    int status = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
@@ -1128,34 +1184,48 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
 //                    }
 //                }
 
-                if (refernece == myDwonloadID) {
-                    //下载完成操作，保存原照片 身份证号用来区别
-                    Log.e("TAG","下载教练照片成功");
-                    rlsb(jlzp, sfzh,type);
+                    if (refernece == myDwonloadID) {
+                        //下载完成操作，保存原照片 身份证号用来区别
+                        Log.e("TAG","下载教练照片成功");
+                        rlsb(jlzp, sfzh,type,false);
 
-                }else {
-                    Log.e("TAG","照片下载失败");
-                    Speaking.in("照片下载失败");
+                    }else {
+                        isback=true;
+                        Log.e("TAG","照片下载失败");
+                        Speaking.in("照片下载失败");
+                    }
                 }
-            }
-        };
-        registerReceiver(receiver, filter);
+            };
+            registerReceiver(receiver, filter);
+        }catch (Exception ex){
+            isback=true;
+            Log.e("TAG","照片下载失败");
+            Speaking.in("照片下载失败");
+        }
+
     }
 
     /**
      * 人脸识别成功后处理教练登录或教练登出
+     * ishave_pic 判断是否有教练照片，有则无需保存特征值，无则保存特征值 true有照片，false没照片
      * */
     Timer pztimer;
     TimerTask pztask;
     int isfinishphoto = 0;//60秒停止比对
-    public void rlsb(final String jlzp, String sfzh, final String type){
+    public void rlsb(final String jlzp, final String sfzh, final String type,boolean ishave_pic){
         try {
             Thread.sleep(800);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         //保存教练原始照片
-        boolean save_ok=isfiled(jlzp, sfzh);
+        boolean save_ok;
+        if(ishave_pic==false){
+            save_ok=isfiled(jlzp, sfzh);
+        }else {
+            save_ok=true;
+        }
+
         isback=true;
         //只有当原始照片保存成功才进行人脸识别
         if(save_ok==true&&isCameraL==true){
@@ -1166,7 +1236,7 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                     if(isfinishphoto<20){
                         isfinishphoto++;
                         String path = captureSnapshot();
-                        boolean stopcamera=compare(path);
+                        boolean stopcamera=compare(path,sfzh);
                         if(stopcamera==true){
                             //关闭摄像头
                             pztimer.cancel();
@@ -1247,7 +1317,7 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
      * 比对照片返回结果
      * */
     String bdpic="";//比对成功后的照片
-    public boolean compare(String newcameraurl) {
+    public boolean compare( String newcameraurl,String sfzh) {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -1258,11 +1328,11 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
         }
         boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
         Log.e("TAG","获取抓拍照片轮廓结果=" + ret);
-        if(ret==true){
-            float score = FaceDet.FaceDetect(newcameraurl);
-            int score1=(int)(score*100);
-            Log.e("TAG","对比结果=" + score1);
-            if(score1>=NettyConf.rlsb_jd){
+        if(ret==true &&faceResult!=null&&faceResult.size()>0){
+
+            String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
+            Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
+            if(StringUtils.isNotEmpty(MatchName)){
                 bdpic=newcameraurl;
                 return true;
             }else {
@@ -1271,6 +1341,20 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
                 getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
                 return false;
             }
+
+            //float score = FaceDet.FaceDetect(newcameraurl);
+//            Log.e("TAG","对比结果=" + score);
+//            int score1=(int)(score*100);
+//            Log.e("TAG","对比结果=" + score1);
+//            if(score1>=NettyConf.rlsb_jd){
+//                bdpic=newcameraurl;
+//                return true;
+//            }else {
+//                boolean delete = RlsbUtil.delete(newcameraurl);
+//                //filepath-->图片绝对路径
+//                getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
+//                return false;
+//            }
         }else {
             boolean delete = RlsbUtil.delete(newcameraurl);
             //filepath-->图片绝对路径
@@ -1311,8 +1395,24 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
      * 显示本地教练证件照
      * */
     public void showCoachPhoto(){
-        String url=coachsp.getString("coachphoto","");;
+//        String url=coachsp.getString("coachphoto","");
+        String url=fileurl+NettyConf.jzjhm+".jpg";
         image_coach.setImageURI(Uri.fromFile(new File(url)));
+    }
+
+
+    /**
+     * 返回键监听
+     * */
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(isback==true){
+                finish();
+            }
+            return false;
+        }else {
+            return super.onKeyDown(keyCode, event);
+        }
     }
 
     @Override
@@ -1419,17 +1519,4 @@ public class LoginCoachActivity extends BaseInitActivity implements View.OnClick
 
     }
 
-    /**
-     * 返回键监听
-     * */
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if(isback==true){
-             finish();
-            }
-            return false;
-        }else {
-            return super.onKeyDown(keyCode, event);
-        }
-    }
 }

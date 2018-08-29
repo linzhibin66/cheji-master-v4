@@ -58,6 +58,7 @@ import com.dgcheshang.cheji.netty.timer.XsjlTimer;
 import com.dgcheshang.cheji.netty.tools.RfidUtil;
 import com.dgcheshang.cheji.netty.tools.fingerprint.BaseInitTask;
 import com.dgcheshang.cheji.netty.util.ByteUtil;
+import com.dgcheshang.cheji.netty.util.CardContent;
 import com.dgcheshang.cheji.netty.util.CountDistance;
 import com.dgcheshang.cheji.netty.util.ForwardUtil;
 import com.dgcheshang.cheji.netty.util.MsgUtilClient;
@@ -123,7 +124,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     TextView tv_zhiwen;
 
     View layout_showphoto;//拍照框
-    String fileurl="/sdcard/jlpic/";//下载学员图片文件夹路径
+    String fileurl="/sdcard/jlypic/";//下载学员图片文件夹路径
     BroadcastReceiver receiver;//下载广播
 
     private USBMonitor mUSBMonitor;					// 用于监视USB设备接入
@@ -133,24 +134,18 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
     private OutputStream snapshotOutStreamL;		// 用于左边摄像头拍照
     private String snapshotFileNameL;
 
-    private OutputStream snapshotOutStreamR;		// 用于右边摄像头拍照
-    private String snapshotFileNameR;
-    private UVCCameraTextureView mUVCCameraViewR;	// 用于右边摄像头预览
-    private Surface mRightPreviewSurface;
-
     private UVCCameraTextureView mUVCCameraViewL;	// 用于左边摄像头预览
     private Surface mLeftPreviewSurface;
     private static final int PREVIEW_WIDTH = 320;
     private static final int PREVIEW_HEIGHT = 240;
     private static final boolean DEBUG = true;
     private CameraRecorder mp4RecorderL=new CameraRecorder(1);
-    private CameraRecorder mp4RecorderR=new CameraRecorder(2);
     private int currentWidth = UVCCamera.DEFAULT_PREVIEW_WIDTH;
     private int currentHeight = UVCCamera.DEFAULT_PREVIEW_HEIGHT;
 
     public String landmarks_path, facenet_path, train_path;
-//    List<FD_FSDKFace> faceResult = new ArrayList<>();
     boolean isback=true;//点击返回键是否生效
+    CardContent cardcontent;
     Handler handler=new  Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -166,13 +161,33 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                 handleOut(xydcr);
 
             }else if(msg.arg1==5){
-                //读卡获取学员信息
+                //从服务器获取学员信息
                 Bundle data = msg.getData();
-                xyxx = (SfrzR) data.getSerializable("xyxx");
-//                xyxx.setXx("http://192.168.0.111:8092/lin.jpg");
-                getXyxx(xyxx);
-            }else if(msg.arg1==6){//uid
+                xyxx = (SfrzR) data.getSerializable("sfxx");
+                //验证IC卡信息
+                if(NettyConf.yz_ICcard==0){
+                    //不验证IC卡
+                    getXyxx(xyxx);
+                    }else if(NettyConf.yz_ICcard==1){
+                    //验证只提示
+                    if(xyxx.getTybh().equals(cardcontent.getTybh())&&xyxx.getSfzh().equals(cardcontent.getZjhm())&&xyxx.getXm().equals(cardcontent.getXm())&&xyxx.getCx().equals(cardcontent.getCx())) {
+                    }else {
+                        Speaking.in("学员信息不匹配");
+                    }
+                    getXyxx(xyxx);
+                }else if(NettyConf.yz_ICcard==2){
+                    //验证IC卡
+                    if(xyxx.getTybh().equals(cardcontent.getTybh())&&xyxx.getSfzh().equals(cardcontent.getZjhm())&&xyxx.getXm().equals(cardcontent.getXm())&&xyxx.getCx().equals(cardcontent.getCx())) {
+                        getXyxx(xyxx);
+                    }else {
+                        Speaking.in("学员信息不匹配");
+                    }
+                }
+            }else if(msg.arg1==6){
+                //返回获取uid
                 String xyuid = msg.getData().getString("xyuid");
+                //返回读卡信息
+                cardcontent = (CardContent) msg.getData().get("cardcontent");
                 image_shuaka.setBackgroundResource(R.mipmap.login_rid_xycard_y);
 
                 String sql="select * from tsfrz where uuid=? and lx=?";
@@ -186,7 +201,25 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     }
                 }else{
                     xyxx=list.get(0);
-                    getXyxx(xyxx);
+                    //验证IC卡信息
+                    if(NettyConf.yz_ICcard==0){
+                        //不验证IC卡
+                        getXyxx(xyxx);
+                    }else if(NettyConf.yz_ICcard==1){
+                        //验证只提示
+                        if(xyxx.getTybh().equals(cardcontent.getTybh())&&xyxx.getSfzh().equals(cardcontent.getZjhm())&&xyxx.getXm().equals(cardcontent.getXm())&&xyxx.getCx().equals(cardcontent.getCx())) {
+                        }else {
+                            Speaking.in("学员信息不匹配");
+                        }
+                        getXyxx(xyxx);
+                    }else if(NettyConf.yz_ICcard==2){
+                        //验证IC卡
+                        if(xyxx.getTybh().equals(cardcontent.getTybh())&&xyxx.getSfzh().equals(cardcontent.getZjhm())&&xyxx.getXm().equals(cardcontent.getXm())&&xyxx.getCx().equals(cardcontent.getCx())) {
+                            getXyxx(xyxx);
+                        }else {
+                            Speaking.in("学员信息不匹配");
+                        }
+                    }
                 }
             }else if(msg.arg1==7){//验证指纹成功后
                 //学员登录
@@ -393,10 +426,18 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
 
             case R.id.bt_studentout://学员登出
                 if(!ZdUtil.ispz){
-                    if(NettyConf.sbtype.equals("1")){
-                        loading = LoadingDialogUtils.createLoadingDialog(context,"学员登出中(请验证指纹)...");
+//                    if(NettyConf.sbtype.equals("1")&&NettyConf.logintype_stu!=2){
+//                        loading = LoadingDialogUtils.createLoadingDialog(context,"学员登出中(请验证指纹)...");
+//                    }
+                    if(NettyConf.logintype_stu==1){
+                        //人脸登出方式
+                        studentOut();
+                    }else if(NettyConf.logintype_stu==2||NettyConf.logintype_stu==4||NettyConf.logintype_stu==3){
+                        //扫码登出方式
+                        loading = LoadingDialogUtils.createLoadingDialog(context,"学员登出中...");
+                        ZdUtil.studentOut1();
                     }
-                    studentOut();
+
                 }else {
                     Toast.makeText(context,",正在拍照请稍后操作",Toast.LENGTH_SHORT).show();
                 }
@@ -405,7 +446,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             case R.id.layout_qzout://强制登出
                 showliuyanDialog();
                 break;
-
 
             case R.id.bt_validtime://有效学时
                 int shuiji = (int)(Math.random()*(9999-1000+1))+1000;
@@ -623,7 +663,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             timer.cancel();
         }
 
-        if(NettyConf.xystate!=1) {
+            if(NettyConf.xystate!=1) {
 
             Bundle data = msg.getData();
             XydlR xydlr = (XydlR) data.getSerializable("xydlr");//学员登录成功后返回来的数据
@@ -753,41 +793,41 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * 读卡成功后获取学员信息
      * */
     public void getXyxx(final SfrzR xyxx){
-        String xx = xyxx.getXx();//学员指纹
-        NettyConf.xbh=xyxx.getTybh();
-        //获取信息成功后显示身份信息
-        layout_shenfen.setVisibility(View.VISIBLE);
-        tv_bianhao.setText(xyxx.getTybh());
-        tv_idcard.setText(xyxx.getSfzh());
-        tv_stu_name.setText(xyxx.getXm());
-        tv_carlx.setText(xyxx.getCx());
-        if(StringUtils.isNotEmpty(xx)) {
-            mRFID.free();
-            if(NettyConf.cardtimer!=null){
-                NettyConf.cardtimer.cancel();
-                NettyConf.cardtimer=null;
-            }
-
-            //判断选择指纹识别还是人脸识别
-            if(NettyConf.sbtype.equals("1")){
-                //指纹识别
-                commonXy(xx,"xycard");
-            }else {
-                //人脸识别
-                if(ZdUtil.ispz==false){
-                    commonXy2(xyxx,"login");
-                }else {
-                    Toast.makeText(context,"正在拍照，请稍后...",Toast.LENGTH_SHORT).show();
+            String xx = xyxx.getXx();//学员指纹
+            NettyConf.xbh = xyxx.getTybh();
+            //获取信息成功后显示身份信息
+            layout_shenfen.setVisibility(View.VISIBLE);
+            tv_bianhao.setText(xyxx.getTybh());
+            tv_idcard.setText(xyxx.getSfzh());
+            tv_stu_name.setText(xyxx.getXm());
+            tv_carlx.setText(xyxx.getCx());
+            if (StringUtils.isNotEmpty(xx)) {
+                mRFID.free();
+                if (NettyConf.cardtimer != null) {
+                    NettyConf.cardtimer.cancel();
+                    NettyConf.cardtimer = null;
                 }
 
-            }
+                //判断选择指纹识别还是人脸识别
+                if (NettyConf.sbtype.equals("1")) {
+                    //指纹识别
+                    commonXy(xx, "xycard");
+                } else {
+                    //人脸识别
+                    if (ZdUtil.ispz == false) {
+                        commonXy2(xyxx, "login");
+                    } else {
+                        Toast.makeText(context, "正在拍照，请稍后...", Toast.LENGTH_SHORT).show();
+                    }
 
-        }else{
-            //直接无指纹验证进行登陆
-            image_zhiwen.setBackgroundResource(R.mipmap.login_fingerprint_y);
-            loading = LoadingDialogUtils.createLoadingDialog(context, "正在登录...");
-            studentLogin();
-        }
+                }
+
+            } else {
+                //直接无指纹验证进行登陆
+                image_zhiwen.setBackgroundResource(R.mipmap.login_fingerprint_y);
+                loading = LoadingDialogUtils.createLoadingDialog(context, "正在登录...");
+                studentLogin();
+            }
     }
 
     /**
@@ -865,7 +905,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             @Override
             public void run() {
                 String xx = xyxx.getXx();//下载路径
-                xx=new String(ByteUtil.hexStringToByte(xx));
+//                xx=new String(ByteUtil.hexStringToByte(xx));
                 Log.e("TAG","学员下载图片路径："+xx);
                 String sfzh = xyxx.getSfzh();
                 //判断文件夹是否存在
@@ -877,7 +917,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     downFile(xx,sfzh,xyzp,type);
                 }else {
                     //有学员照片直接抓拍验证
-                    rlsb(xyzp,sfzh, type);
+                    rlsb(xyzp,sfzh, type,true);
                 }
             }
         };
@@ -1058,7 +1098,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             return snapshotFileNameL;
 
     }
-
 
     private synchronized void releaseCameraL() {
         synchronized (this) {
@@ -1293,6 +1332,9 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * 判断文件是否存在并保存比对原照片
      * */
     public boolean isfiled(String mageurl,String name){
+        if (faceResult.size() > 0) {
+            faceResult.clear();
+        }
         File file = new File(mageurl);
         if (file.exists()&&file.length() > 0) {
             boolean ret = FaceDet.FD_FSDK_FaceDetection(mageurl, faceResult);
@@ -1300,6 +1342,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
             if(ret==true){
                 //成功获取轮廓并保存
                 boolean mIsSave = FaceDet.CaptureFaceMuti(mageurl, name);
+                Log.e("TAG","保存学员原始照片轮廓结果=" + mIsSave);
                 return true;
             }else {
                 return false;
@@ -1314,52 +1357,66 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * */
     public void downFile(String url, final String sfzh, final String xyzp, final String type){
         //下载文件
-        final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse(url);
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        // 设置下载路径和文件名
-        request.setDestinationInExternalPublicDir("jlpic", sfzh+".jpg");
-        request.setMimeType("application/vnd.android.package-archive");
-        request.setAllowedOverRoaming(false);
-        // 设置为可被媒体扫描器找到
-        request.allowScanningByMediaScanner();
-        // 设置为可见和可管理
-        request.setVisibleInDownloadsUi(true);
-        // 获取此次下载的ID
-        final long refernece = dManager.enqueue(request);
-        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-        receiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (refernece == myDwonloadID) {
-                    Log.e("TAG","下载学员照片成功");
-                    //下载完成操作，保存原照片 身份证号用来区别
-                    rlsb(xyzp, sfzh,type);
+        try {
+            final DownloadManager dManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(url);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            // 设置下载路径和文件名
+            request.setDestinationInExternalPublicDir("jlypic", sfzh+".jpg");
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setAllowedOverRoaming(false);
+            // 设置为可被媒体扫描器找到
+            request.allowScanningByMediaScanner();
+            // 设置为可见和可管理
+            request.setVisibleInDownloadsUi(true);
+            // 获取此次下载的ID
+            final long refernece = dManager.enqueue(request);
+            IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+            receiver = new BroadcastReceiver() {
+                public void onReceive(Context context, Intent intent) {
+                    long myDwonloadID = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                    if (refernece == myDwonloadID) {
+                        Log.e("TAG","下载学员照片成功");
+                        //下载完成操作，保存原照片 身份证号用来区别
+                        rlsb(xyzp, sfzh,type,false);
 
-                }else {
-                    Log.e("TAG","下载学员照片失败");
-                    Speaking.in("照片下载失败");
+                    }else {
+                        isback=true;
+                        Log.e("TAG","下载学员照片失败");
+                        Speaking.in("照片下载失败");
+                    }
                 }
-            }
-        };
-        registerReceiver(receiver, filter);
+            };
+            registerReceiver(receiver, filter);
+        }catch (Exception ex){
+            isback=true;
+            Log.e("TAG","下载学员照片失败");
+            Speaking.in("照片下载失败");
+        }
+
     }
 
     /**
      * 人脸识别成功后处理教练登录或教练登出
+     * ishave_pic 判断是否有教练照片，有则无需保存特征值，无则保存特征值 true有照片，false没照片
      * */
      Timer pztimer;
     boolean stopcamera=false;
     TimerTask pztask;
     int isfinishphoto=0;//超过60秒自动关闭
-    public void rlsb(final String xyzp, String sfzh, final String type){
+    public void rlsb(final String xyzp, final String sfzh, final String type ,boolean ishave_pic){
         try {
             Thread.sleep(800);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        //保存学员原始照片
-        boolean save_ok=isfiled(xyzp, sfzh);
+        //保存学员原始照片,未登录状态保存特征值
+        boolean save_ok;
+        if(ishave_pic==false){
+             save_ok=isfiled(xyzp, sfzh);
+        }else {
+            save_ok=true;
+        }
         isback=true;
         if(save_ok==true &&isCameraL==true){
             pztimer = new Timer();
@@ -1369,7 +1426,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
                     if(isfinishphoto<20){
                         isfinishphoto++;
                         String path = captureSnapshot();
-                        boolean stopcamera=compare(path);
+                        boolean stopcamera=compare(path,sfzh);
                         if(stopcamera==true){
                             //关闭摄像头
                             pztimer.cancel();
@@ -1443,7 +1500,7 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
      * 比对照片返回结果
      * */
     String bdpic="";//比对成功后的照片
-    public boolean compare(String newcameraurl) {
+    public boolean compare(String newcameraurl,String sfzh) {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -1454,19 +1511,22 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         }
         boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
         Log.e("TAG","获取抓拍照片轮廓结果=" + ret);
-        if(ret==true){
-            float score = FaceDet.FaceDetect(newcameraurl);
-            int score1=(int)(score*100);
-            Log.e("TAG","对比结果=" + score1);
-            if(score1>=NettyConf.rlsb_jd){
+        if(ret==true&&faceResult!=null&&faceResult.size()>0){
+
+            String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
+            Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
+            Log.e("TAG","原始身份证号=" + sfzh);
+
+            if(StringUtils.isNotEmpty(MatchName)){
                 bdpic=newcameraurl;
                 return true;
             }else {
-                RlsbUtil.delete(newcameraurl);
+                boolean delete = RlsbUtil.delete(newcameraurl);
                 //filepath-->图片绝对路径
                 getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
                 return false;
             }
+
         }else {
             RlsbUtil.delete(newcameraurl);
             //filepath-->图片绝对路径
@@ -1505,11 +1565,13 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
 
 
     }
+
     /***
      * 显示本地学员证件照
      * */
     public void showCoachPhoto(){
-        String url=sp.getString("stuphoto","");;
+//        String url=sp.getString("stuphoto","");
+        String url=fileurl+sp.getString("xyidcard", "")+".jpg";
         image_stu.setImageURI(Uri.fromFile(new File(url)));
     }
 
@@ -1548,7 +1610,6 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
 //            mUSBMonitor.destroy();
 //            mUSBMonitor = null;
         }
-//        RlsbUtil.deltimers();
     }
 
     /**

@@ -324,16 +324,27 @@ public class ByteToCls {
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				}
+
+				temp= ByteUtil.subBytes(sbody, 46, 20);
+				hs= ByteUtil.bytesToHexString(temp);
+				hs= ByteUtil.clearHexStringfront(hs);
+				temp= ByteUtil.hexStringToByte(hs);
+				try {
+					deviceInfo.setCjh(new String(temp,"GBK"));
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+
 			}
-			if(sbody.length>46){
-				temp= ByteUtil.subBytes(sbody, 46, 2);
+			if(sbody.length>66){
+				temp= ByteUtil.subBytes(sbody, 66, 2);
 				try {
 					deviceInfo.setSyid(new String(temp,"GBK"));
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				}
 
-				temp= ByteUtil.subBytes(sbody, 48, 4);
+				temp= ByteUtil.subBytes(sbody, 68, 4);
 				try {
 					deviceInfo.setSxyid(new String(temp,"GBK"));
 				} catch (UnsupportedEncodingException e) {
@@ -722,62 +733,128 @@ public class ByteToCls {
 	 * 身份认证回复
 	 * @return
 	 */
+//	public static SfrzR getSfrzR(byte[] sbody){
+//		Log.e("TAG",ByteUtil.bytesToHexString(sbody));
+//		try {
+//			SfrzR sr = new SfrzR();
+//
+//			byte[] temp = ByteUtil.subBytes(sbody, 0, 2);
+//			sr.setJpbxh(ByteUtil.byte2ToUnsignedShort(temp, 0));
+//
+//			sr.setJg(sbody[2]);
+//
+//			temp = ByteUtil.subBytes(sbody, 3, 4);
+//			sr.setXxcd(ByteUtil.byte4ToInt(temp, 0));
+//
+//			temp = ByteUtil.subBytes(sbody, 7, sr.getXxcd());
+//			sr.setXx(ByteUtil.bytesToHexString(temp));
+//
+//
+//			int len = 7 + sr.getXxcd();
+//
+//			if (sbody.length > len) {
+//				temp = ByteUtil.subBytes(sbody, len, 1);
+//				sr.setLx(temp[0]);
+//
+//				temp=ByteUtil.subBytes(sbody, len + 1, 4);
+//				int uidlen=ByteUtil.byte4ToInt(temp, 0);
+//
+//				temp = ByteUtil.subBytes(sbody, len + 5, uidlen);
+//				sr.setUuid(new String(temp));
+//
+//				if (sbody.length > 5 + len+uidlen) {
+//					temp = ByteUtil.subBytes(sbody,5 + len+uidlen, 16);
+//					sr.setTybh(new String(temp));
+//				}
+//
+//				if (sbody.length > 25 + len) {
+//					temp = ByteUtil.subBytes(sbody, 21 + len+uidlen, 18);
+//					String hs = ByteUtil.bytesToHexString(temp);
+//					hs = ByteUtil.clearHexStringfront(hs);
+//					temp = ByteUtil.hexStringToByte(hs);
+//					sr.setSfzh(new String(temp));
+//
+//					if (sbody.length > 39 + len+uidlen) {
+//						temp = ByteUtil.subBytes(sbody, 39 + len+uidlen, 2);
+//						sr.setCx(new String(temp));
+//					}
+//
+//					if (sbody.length >41 + len+uidlen) {
+//						temp = ByteUtil.subBytes(sbody, 41 + len+uidlen, sbody.length - (41 + len));
+//						try {
+//							sr.setXm(new String(temp, "GBK"));
+//						} catch (UnsupportedEncodingException e) {
+//							e.printStackTrace();
+//						}
+//					}
+//				}
+//			}
+//
+//			return sr;
+//		}catch(Exception e){
+//			e.printStackTrace();
+//			Log.e("TAG","身份认证错误"+e);
+//			return null;}
+//	}
+
 	public static SfrzR getSfrzR(byte[] sbody){
+		SfrzR sr=new SfrzR();
+
+		byte[] temp=ByteUtil.subBytes(sbody, 0, 2);
+		sr.setJpbxh(ByteUtil.byte2ToUnsignedShort(temp, 0));
+
+		sr.setJg(sbody[2]);
+
+		temp=ByteUtil.subBytes(sbody, 3, 4);
+		sr.setXxcd(ByteUtil.byte4ToInt(temp, 0));
+		temp=ByteUtil.subBytes(sbody, 7, sr.getXxcd());
 		try {
-			SfrzR sr = new SfrzR();
+			sr.setXx(new String(temp,"GBK"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 
-			byte[] temp = ByteUtil.subBytes(sbody, 0, 2);
-			sr.setJpbxh(ByteUtil.byte2ToUnsignedShort(temp, 0));
+		if(sbody.length>7+sr.getXxcd()){
+			temp=ByteUtil.subBytes(sbody, 7+sr.getXxcd(), 1);
+			sr.setLx(temp[0]);
 
-			sr.setJg(sbody[2]);
+			temp=ByteUtil.subBytes(sbody, 8+sr.getXxcd(), 4);
+			int uidlen=ByteUtil.byte4ToInt(temp, 0);
 
-			temp = ByteUtil.subBytes(sbody, 3, 4);
-			sr.setXxcd(ByteUtil.byte4ToInt(temp, 0));
+			temp=ByteUtil.subBytes(sbody,12+sr.getXxcd(),uidlen);
+			sr.setUuid(new String(temp));
 
-			temp = ByteUtil.subBytes(sbody, 7, sr.getXxcd());
-			sr.setXx(ByteUtil.bytesToHexString(temp));
+			if(sbody.length>12+sr.getXxcd()+uidlen){
+				temp=ByteUtil.subBytes(sbody, 12+sr.getXxcd()+uidlen, 16);
+				sr.setTybh(new String(temp));
+			}
 
+			if(sbody.length>28+sr.getXxcd()+uidlen){
+				temp=ByteUtil.subBytes(sbody, 28+sr.getXxcd()+uidlen, 18);
+				String hs=ByteUtil.bytesToHexString(temp);
+				hs=ByteUtil.clearHexStringfront(hs);
+				temp=ByteUtil.hexStringToByte(hs);
+				sr.setSfzh(new String(temp));
 
-			int len = 7 + sr.getXxcd();
-
-			if (sbody.length > len) {
-				temp = ByteUtil.subBytes(sbody, len, 1);
-				sr.setLx(temp[0]);
-
-				temp = ByteUtil.subBytes(sbody, len + 1, 8);
-				sr.setUuid(new String(temp));
-
-				if (sbody.length > 9 + len) {
-					temp = ByteUtil.subBytes(sbody, 9 + len, 16);
-					sr.setTybh(new String(temp));
+				if(sbody.length>46+sr.getXxcd()+uidlen){
+					temp=ByteUtil.subBytes(sbody, 46+sr.getXxcd()+uidlen, 2);
+					sr.setCx(new String(temp));
 				}
 
-				if (sbody.length > 25 + len) {
-					temp = ByteUtil.subBytes(sbody, 25 + len, 18);
-					String hs = ByteUtil.bytesToHexString(temp);
-					hs = ByteUtil.clearHexStringfront(hs);
-					temp = ByteUtil.hexStringToByte(hs);
-					sr.setSfzh(new String(temp));
-
-					if (sbody.length > 43 + len) {
-						temp = ByteUtil.subBytes(sbody, 43 + len, 2);
-						sr.setCx(new String(temp));
-					}
-
-					if (sbody.length > 45 + len) {
-						temp = ByteUtil.subBytes(sbody, 45 + len, sbody.length - (45 + len));
-						try {
+				if(sbody.length>48+sr.getXxcd()+uidlen){
+					temp=ByteUtil.subBytes(sbody, 48+sr.getXxcd()+uidlen, sbody.length-(48+sr.getXxcd()+uidlen));
+					try {
 							sr.setXm(new String(temp, "GBK"));
 						} catch (UnsupportedEncodingException e) {
 							e.printStackTrace();
 						}
-					}
 				}
-			}
 
-			return sr;
-		}catch(Exception e){return null;}
+			}
+		}
+		return sr;
 	}
+
 
 	/**
 	 * 请求统一编号

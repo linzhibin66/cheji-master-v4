@@ -26,11 +26,15 @@ public class SetZdcs {
         edit.putString("0011","0");//主服务器无线通信拨号用户名
         edit.putString("0012","0");//主服务器无线通信拨号密码
         edit.putString("0013","119.147.149.60");//主服务器地址，IP或域名
+//        edit.putString("0013","192.168.8.50");//主服务器地址，IP或域名
+//        edit.putString("0013","holer.org");//主服务器地址，IP或域名
         edit.putString("0014","0");//备份服务器APN，无线通信拨号访问点
         edit.putString("0015","0");//备份服务器无线通信拨号用户名
         edit.putString("0016","0");//备份服务器无线通信拨号密码
         edit.putString("0017","59.37.17.67");//备份服务器地址，IP或域名
         edit.putString("0018","7979");//服务器TCP端口
+//        edit.putString("0018","7878");//服务器TCP端口
+//        edit.putString("0018","65063");//服务器TCP端口
         edit.putString("0019","13010");//服务器UDP端口
         edit.putString("0020","0");//位置汇报策略，0：定时汇报；1：定距汇报；2：定时和定距汇报
         edit.putString("0021","0");//位置汇报方案，0：根据ACC状态；1：根据登录状态和ACC状态，先判断登录状态，若登录再根据ACC状态
@@ -45,7 +49,7 @@ public class SetZdcs {
         edit.putString("0030","90");//拐点补传角度，<180°
         edit.putString("0040","0");//监控平台电话号码
         edit.putString("0041","0");//复位电话号码，可采用此电话号码拨打终端电话让终端复位
-        edit.putString("0042","94");//恢复出厂设置电话号码，可采用此电话号码拨打终端电话让终端恢复出厂设置     (设置人像比对阈值0-100)
+        edit.putString("0042","0.940f");//恢复出厂设置电话号码，可采用此电话号码拨打终端电话让终端恢复出厂设置     (设置人像比对阈值0-100)
         edit.putString("0043","0");//监控平台SMS电话号码
         edit.putString("0044","0");//接收终端SMS文本报警号码
         edit.putString("0045","0");//终端电话接听策略，0：自动接听；1：ACC ON时自动接听，OFF时手动接听
@@ -76,6 +80,7 @@ public class SetZdcs {
         edit.putString("0085","100");//车辆脉冲系数，车辆行驶1km距离过程中产生的脉冲信号个数
         edit.commit();
     }
+
 /**
  * 应用参数
  * */

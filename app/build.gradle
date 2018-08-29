@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     useLibrary 'org.apache.http.legacy'
     defaultConfig {
@@ -10,7 +10,12 @@ android {
         minSdkVersion 15
         targetSdkVersion 22
         versionCode 1
-        versionName "3.6"
+        versionName "1.0"
+
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi-v7a' //, 'x86', '', 'x86_64', 'arm64-v8a'
+        }
 
     }
 
@@ -51,12 +56,18 @@ dependencies {
     compile('com.serenegiant:common:1.1.9') {
         exclude module: 'support-v4'
     }
-    compile 'com.android.support:appcompat-v7:25.0.0'
-    compile 'com.android.support:recyclerview-v7:25.0.0'
-    compile 'com.android.support:support-v4:25.0.0-alpha1'
+    //bugly异常上报
+
+    //二维码
+    compile 'com.android.support:recyclerview-v7:26.0.0-alpha1'
+    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'
+    compile 'com.android.support:support-v4:26.0.0-alpha1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.github.clans:fab:1.6.4'
     compile 'org.aspectj:aspectjrt:1.8.7'
     compile 'commons-io:commons-io:2.4'
+    compile 'com.tencent.bugly:crashreport:latest.release'
+    compile 'com.tencent.bugly:nativecrashreport:latest.release'
+    compile 'com.google.zxing:core:3.3.0'
     testCompile 'junit:junit:4.12'
 }

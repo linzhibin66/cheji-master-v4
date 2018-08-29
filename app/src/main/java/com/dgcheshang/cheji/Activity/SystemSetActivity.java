@@ -52,15 +52,11 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
     private EditText edt_idcard;
     SharedPreferences.Editor restart_edit;
     String[] text_restart=new String[]{"未选择","定时关机","定时重启"};
-    RadioButton radio_zw,radio_rl;
-    RadioGroup group_shibie;
-    public Fingerprint mFingerprint;
-    private BaseInitTask mBaseInitTask;
     SharedPreferences zdcssp;
     SharedPreferences.Editor zdcs_edit;
-    TextView tv_sb_tishi;
     String fileurl="/sdcard/jlypic/";//教练员跟学员图片文件夹路径
-
+    SharedPreferences.Editor coachedit;
+    SharedPreferences.Editor stuedit;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +68,10 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
      * 初始化布局
      * */
     private void initView() {
+        SharedPreferences coachsp = getSharedPreferences("coach", Context.MODE_PRIVATE);
+        coachedit = coachsp.edit();
+        SharedPreferences stusp = getSharedPreferences("student", Context.MODE_PRIVATE);
+        stuedit = stusp.edit();
         final SharedPreferences restartsp = getSharedPreferences("restartspinner", Context.MODE_PRIVATE);
         zdcssp = getSharedPreferences("zdcs", Context.MODE_PRIVATE);//获取终端参数中的识别类型
         zdcs_edit = zdcssp.edit();
@@ -83,23 +83,8 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
         Button bt_show_dzwl = (Button) findViewById(R.id.bt_show_dzwl);//电子围栏列表
         CheckBox checkbox_show = (CheckBox) findViewById(R.id.cb_show_dzwl);//选择框
         Spinner spinner_restart = (Spinner) findViewById(R.id.spinner_restart);//开关机选择
-        group_shibie = (RadioGroup) findViewById(R.id.group_shibie);
-        radio_zw = (RadioButton) findViewById(R.id.radio_zw);//指纹识别
-        radio_rl = (RadioButton) findViewById(R.id.radio_rl);//人脸识别
-        tv_sb_tishi = (TextView) findViewById(R.id.tv_sb_tishi);//不支持指纹验证功能提示
-        //判断是否有指纹模块
-        if(NettyConf.have_zw.equals("1")){
-            //有指纹模块
-            if(NettyConf.sbtype.equals("1")){
-                radio_zw.setChecked(true);
-            }else {
-                radio_rl.setChecked(true);
-            }
-        }else {
-            //没有指纹模块
-            radio_rl.setChecked(true);
-            tv_sb_tishi.setVisibility(View.VISIBLE);//显示提示
-        }
+
+
         ArrayAdapter<String> restartAdapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, text_restart);
         restartAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_restart.setAdapter(restartAdapter);
@@ -204,32 +189,6 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
             }
         });
 
-        //识别类型监听
-        group_shibie.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-              switch (checkedId){
-                  case R.id.radio_zw://指纹
-                      if(NettyConf.have_zw.equals("2")){
-                          //没有指纹识别功能
-                          radio_zw.setChecked(false);
-                          Toast.makeText(context,"本设备不支持指纹识别功能",Toast.LENGTH_SHORT).show();
-                      }else {
-                          //有指纹识别或者未识别
-                          NettyConf.sbtype="1";
-                          zdcs_edit.putString("sbtype","1");
-                          zdcs_edit.commit();
-                      }
-                      break;
-                  case R.id.radio_rl://人脸
-                      //保存人像识别状态
-                      NettyConf.sbtype="4";
-                      zdcs_edit.putString("sbtype","4");
-                      zdcs_edit.commit();
-                      break;
-              }
-            }
-        });
         layout_back.setOnClickListener(this);
         bt_clear.setOnClickListener(this);
         bt_cacnel_all.setOnClickListener(this);
@@ -316,7 +275,12 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
                 Log.e("TAG", "清除身份信息数量：" + num);
             }
             //清除教练跟学员原始照片文件夹
-            boolean delete = RlsbUtil.delete(fileurl);
+            RlsbUtil.deleteDir(fileurl);
+            //清除教练，学员登录状态
+            coachedit.putInt("jlstate",0).commit();
+            NettyConf.jlstate=0;
+            stuedit.putInt("xystate",0).commit();
+            NettyConf.xystate=0;
             Speaking.in("清除成功");
         }
     }
@@ -340,6 +304,11 @@ public class SystemSetActivity extends BaseInitActivity implements View.OnClickL
             boolean delete = RlsbUtil.delete(fileurl + idcard + ".jpg");
             Log.e("TAG","删除照片结果="+delete);
             if (num > 0) {
+                //清除教练，学员登录状态
+                coachedit.putInt("jlstate",0).commit();
+                NettyConf.jlstate=0;
+                stuedit.putInt("xystate",0).commit();
+                NettyConf.xystate=0;
 
                 Speaking.in("清除成功");
 

@@ -13,7 +13,7 @@ import java.util.Timer;
  * Created by Administrator on 2017/5/8 0008.
  */
 public class NettyConf {
-    public static boolean debug=false;//调试模式
+    public static boolean debug=true;//调试模式
     public static Boolean netstate;//网络状态
     public static boolean camerastate;//摄像头状态
     public static int background=0;//是否停止后台监听 0不停止，1停止
@@ -32,10 +32,12 @@ public class NettyConf {
     public static String model="V600ID";//终端型号
     public static String termno;//终端编号
     public static String uid ="65DF6FEB,75A56FEB,05DD6FEB,85E574EB,15846FEB,052F73EB,F55E73EB,254173EB";//管理员卡uid
-    public static String sbtype = "1";//识别类型 1指纹识别 4人脸识别
-    public static String have_zw = "0";//是否有指纹识别，,0未检测，1有，2没有
-    public static int rlsb_jd = 94;//人脸识别精准度0-100
-    public static String student_pic = "";//学员原始照片路径用来抓拍
+    public static String sbtype = "4";//识别类型 1指纹识别 4人脸识别
+    public static int logintype_coach=1;//登录方式： 1人脸登录，2二维码登录，3手机登录，4微信登录
+    public static int logintype_stu=1;//登录方式： 1人脸登录，2二维码登录，3手机登录，4微信登录
+    public static float thd = 0.940f;  //人脸识别精准度
+    public static String student_pic = "";//学员原始照片路径
+    public static int yz_ICcard =0;//是否验证IC卡读取的数据信息与服务端获取的数据 不验证0,验证但不执行1，验证2
 
     //本地存储
     public static String host="";

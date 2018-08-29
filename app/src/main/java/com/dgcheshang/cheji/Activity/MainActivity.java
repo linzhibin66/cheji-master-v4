@@ -34,6 +34,7 @@ import com.dgcheshang.cheji.netty.conf.NettyConf;
 import com.dgcheshang.cheji.netty.serverreply.DeviceInfo;
 import com.dgcheshang.cheji.netty.timer.CardTimer;
 import com.dgcheshang.cheji.netty.timer.LoadingTimer;
+import com.dgcheshang.cheji.netty.util.CardContent;
 import com.dgcheshang.cheji.netty.util.GatewayService;
 import com.dgcheshang.cheji.netty.util.ZdUtil;
 import com.dgcheshang.cheji.nettygps.conf.Params;
@@ -42,6 +43,8 @@ import com.rscja.customservices.ICustomServices;
 import com.rscja.deviceapi.RFIDWithISO14443A;
 
 import org.apache.commons.lang3.StringUtils;
+
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Timer;
 
@@ -93,6 +96,10 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                 }
                 //刷卡成功后返回uid
                 String adminuid = msg.getData().getString("adminuid");
+                CardContent cardcontent = (CardContent) msg.getData().get("cardcontent");
+                if(cardcontent.getXm()!=null&&!cardcontent.getXm().isEmpty()){
+                    showCardContentDialog(cardcontent,adminuid);
+                }
                 tv_show_uid.setVisibility(View.VISIBLE);
                 tv_show_uid.setText("UID:"+adminuid);
                 adminLogin(adminuid);
@@ -139,6 +146,7 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
                     sp_carcolor.setSelection(6, true);
                 }
                 color=cpys;
+                String cjh = deviceInfo.getCjh();//车架号
                 String cp = deviceInfo.getCp();//车牌号
                 String jian = cp.substring(0, 1);//获取简称
                 for(int i =0;i<carnumber.length;i++){
@@ -462,6 +470,7 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
         return false;
 
     }
+
     /**
      * 获取设置权限Dialog
      * */
@@ -504,42 +513,46 @@ public class MainActivity extends BaseInitActivity  implements View.OnClickListe
             }
         });
     }
-    /**
-     * 退出dialog
-     * */
-    private void showOutDialog(){
-        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(context);
-        normalDialog.setTitle("提示");
-        normalDialog.setMessage("您确定要退出本应用吗？");
-        normalDialog.setPositiveButton("确定",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
 
-                        int currentVersion = android.os.Build.VERSION.SDK_INT;
-                        if (currentVersion > android.os.Build.VERSION_CODES.ECLAIR_MR1) {
-                            Intent startMain = new Intent(Intent.ACTION_MAIN);
-                            startMain.addCategory(Intent.CATEGORY_HOME);
-                            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(startMain);
-                            System.exit(0);
-                        } else {// android2.1
-                            android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
-                            am.restartPackage(getPackageName());
-                        }
-                    }
-                });
-        normalDialog.setNegativeButton("取消",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-        // 显示
-        normalDialog.show();
+    /**
+     * 显示读卡内容信息Dialog
+     *
+     * @param cardInfo
+     * @param adminuid*/
+    private void showCardContentDialog(CardContent cardInfo, String adminuid) {
+        final AlertDialog builder = new AlertDialog.Builder(this,R.style.CustomDialog).create(); // 先得到构造器
+        builder.show();
+        builder.getWindow().setContentView(R.layout.dialog_card_content);
+        builder.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);//解决不能弹出键盘
+        LayoutInflater factory = LayoutInflater.from(this);
+        View view = factory.inflate(R.layout.dialog_card_content, null);
+        builder.getWindow().setContentView(view);
+        TextView tv_dialog_uid = view.findViewById(R.id.tv_dialog_uid);
+        TextView tv_dialog_who = view.findViewById(R.id.tv_dialog_who);
+        TextView tv_dialog_name = view.findViewById(R.id.tv_dialog_name);
+        TextView tv_dialog_zjhm = view.findViewById(R.id.tv_dialog_zjhm);
+        TextView tv_dialog_schoolname = view.findViewById(R.id.tv_dialog_schoolname);
+        TextView tv_dialog_fksj = view.findViewById(R.id.tv_dialog_fksj);//发卡时间
+        TextView tv_dialog_car = view.findViewById(R.id.tv_dialog_car);
+        TextView tv_dialog_bmsj = view.findViewById(R.id.tv_dialog_bmsj);//报名时间
+        TextView tv_bmsj = view.findViewById(R.id.tv_bmsj);//显示报名时间或有效
+        tv_dialog_uid.setText(adminuid);
+        if(cardInfo.getType().equals("Y")){
+            tv_dialog_who.setText("教练卡");
+            tv_bmsj.setText("有效时间：");
+        }else {
+            tv_dialog_who.setText("学员卡");
+            tv_bmsj.setText("报名时间：");
+        }
+        tv_dialog_name.setText(cardInfo.getXm());
+        tv_dialog_schoolname.setText(cardInfo.getJxmc());
+
+        tv_dialog_fksj.setText( cardInfo.getFkrq());
+        tv_dialog_zjhm.setText(cardInfo.getZjhm());
+        tv_dialog_car.setText(cardInfo.getCx());
+        tv_dialog_bmsj.setText(cardInfo.getBmsj());
     }
+
 
     /**
      * 注销dialog

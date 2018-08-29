@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -43,9 +44,10 @@ public class InitUtil {
     /**
      * 获取设备基本信息
      * */
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void getDeviceId(){
         TelephonyManager tm = (TelephonyManager) CjApplication.getInstance().getSystemService(Context.TELEPHONY_SERVICE);
-        String IMEI = tm.getDeviceId();
+        String imei = tm.getImei();
         String line1Number = tm.getLine1Number();//电话号码
         String model= android.os.Build.MODEL;//型号
         String xlh=android.os.Build.SERIAL;
@@ -68,7 +70,7 @@ public class InitUtil {
                 NettyConf.zdxlh=xlh;
             }
         }
-        NettyConf.imei=IMEI;
+        NettyConf.imei=imei;//设置IMEI
         String versionName = getVersionName(CjApplication.getInstance());//获取版本号
         NettyConf.version=versionName;
 
@@ -93,7 +95,6 @@ public class InitUtil {
     /**
      * 赋值给静态
      * */
-
     public static void setNum(){
         //获取鉴权成功后的sp。
         SharedPreferences sp = CjApplication.getInstance().getSharedPreferences("jianquan", Context.MODE_PRIVATE);
@@ -134,15 +135,11 @@ public class InitUtil {
         String dzwlcl=zdcssp.getString("0006", "0");
         String sfjm=zdcssp.getString("0007", "0");
         String dzwllxsj=zdcssp.getString("0010", "5");
-        String sbtype = zdcssp.getString("sbtype", "1");//识别类型 1指纹识别 4人脸识别
-        String have_zw = zdcssp.getString("have_zw", "0");//是否有指纹识别,0未检测，1有，2没有
         String termno= zdcssp.getString("termno", "0");
         String gps_ip = zdcssp.getString("0017", "59.37.17.67");//gps_ip
         String gps_duankou = zdcssp.getString("0019", "13010");//gps端口
-        String rlsbnumb = zdcssp.getString("0042", "94");//人像识别对比阈值0-100
-        NettyConf.have_zw=have_zw;
-        NettyConf.sbtype=sbtype;
-
+        String rlsbnumb = zdcssp.getString("0042", "0.940f");//人像识别对比阈值
+        String yz_Iccard = zdcssp.getString("0043", "0");//验证IC卡信息是否与服务端获取信息。不验证0，验证只提示1，验证2
         NettyConf.host=host;
         NettyConf.port=Integer.valueOf(port);
         NettyConf.cp=cp;
@@ -155,7 +152,7 @@ public class InitUtil {
         Params.gpshost=gps_ip;
         Params.gpsport=Integer.valueOf(gps_duankou);
 
-        NettyConf.rlsb_jd=Integer.valueOf(rlsbnumb);
+        NettyConf.thd=Float.valueOf(rlsbnumb);
         NettyConf.xtjg=Integer.valueOf(xtjg);//心跳间隔
         NettyConf.cfjg=Integer.valueOf(cfjg);//重发间隔
         NettyConf.cfcs=Integer.valueOf(cfcs);//重传次数
@@ -174,6 +171,7 @@ public class InitUtil {
             NettyConf.sfjm1="1";
             NettyConf.sfjm2="2";
         }
+        NettyConf.yz_ICcard = Integer.parseInt(yz_Iccard);
 
         //应用参数设置
         SharedPreferences yycssp = CjApplication.getInstance().getSharedPreferences("yycs", Context.MODE_PRIVATE);
@@ -189,6 +187,8 @@ public class InitUtil {
         String jlbh = coachsp.getString("jlbh", "");
         String cx = coachsp.getString("cx", "");
         String jzjhm = coachsp.getString("jzjhm", "");
+        int logintype_coach = coachsp.getInt("logintype", 1);
+        NettyConf.logintype_coach=logintype_coach;
         if(!jlbh.equals("")){
             NettyConf.jbh=jlbh;
             NettyConf.jlstate=jlstate;
@@ -206,6 +206,8 @@ public class InitUtil {
         int fzpxjlsc=stusp.getInt("fzpxjlsc",0);
         boolean sendState = stusp.getBoolean("sendState", true);
         String stu_pic = stusp.getString("stuphoto", "");//学员照片路径
+        int logintype_stu = stusp.getInt("logintype", 1);
+        NettyConf.logintype_stu=logintype_stu;
         NettyConf.student_pic=stu_pic;
         NettyConf.sendState=sendState;
         if(!xybh.equals("")){

@@ -2,10 +2,14 @@ package com.dgcheshang.cheji.netty.util;
 
 import android.content.Context;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import com.dgcheshang.cheji.CjApplication;
 
+import org.apache.http.util.EncodingUtils;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -94,5 +98,47 @@ public class RlsbUtil {
             //printLog("*******cacheFile=" + cacheFile.getAbsolutePath());
         }
         return cacheFile.getAbsolutePath();
+    }
+
+
+
+    /**
+     *  获得编码格式
+     * */
+    public static String codetype(byte[] head) {
+        String type = "";
+        byte[] codehead = new byte[3];
+        System.arraycopy(head, 0, codehead, 0, 3);
+        if(codehead[0] == -1 && codehead[1] == -2) {
+            type = "UTF-16";
+        }
+        else if(codehead[0] == -2 && codehead[1] == -1) {
+            type = "UNICODE";
+        }
+        else if(codehead[0] == -17 && codehead[1] == -69 && codehead[2] == -65) {
+            type = "UTF-8";
+        }
+        else {
+            type = "GB2312";
+        }
+        return type;
+    }
+
+    //删除文件夹和文件夹里面的文件
+    public static void deleteDir(final String pPath) {
+        File dir = new File(pPath);
+        deleteDirWihtFile(dir);
+    }
+
+    public static void deleteDirWihtFile(File dir) {
+        if (dir == null || !dir.exists() || !dir.isDirectory())
+            return;
+        for (File file : dir.listFiles()) {
+            if (file.isFile())
+                file.delete(); // 删除所有文件
+            else if (file.isDirectory())
+                deleteDirWihtFile(file); // 递规的方式删除文件夹
+        }
+        dir.delete();// 删除目录本身
     }
 }
