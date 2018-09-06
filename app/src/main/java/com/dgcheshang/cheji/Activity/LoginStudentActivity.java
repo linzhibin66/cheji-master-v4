@@ -41,6 +41,7 @@ import com.dgcheshang.cheji.CjApplication;
 import com.dgcheshang.cheji.Database.DbConstants;
 import com.dgcheshang.cheji.Database.DbHandle;
 import com.dgcheshang.cheji.R;
+import com.dgcheshang.cheji.Tools.FileUtil;
 import com.dgcheshang.cheji.Tools.Helper;
 import com.dgcheshang.cheji.Tools.LoadingDialogUtils;
 import com.dgcheshang.cheji.Tools.Speaking;
@@ -1509,30 +1510,36 @@ public class LoginStudentActivity extends BaseInitActivity implements View.OnCli
         if (faceResult.size() > 0) {
             faceResult.clear();
         }
-        boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
-        Log.e("TAG","获取抓拍照片轮廓结果=" + ret);
-        if(ret==true&&faceResult!=null&&faceResult.size()>0){
+        Long filesize = FileUtil.fileLength(newcameraurl);
+        if(filesize>10){
+            boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
+            Log.e("TAG","获取抓拍照片轮廓结果=" + ret);
+            if(ret==true&&faceResult!=null&&faceResult.size()>0){
 
-            String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
-            Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
-            Log.e("TAG","原始身份证号=" + sfzh);
+                String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
+                Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
+                Log.e("TAG","原始身份证号=" + sfzh);
 
-            if(StringUtils.isNotEmpty(MatchName)){
-                bdpic=newcameraurl;
-                return true;
+                if(StringUtils.isNotEmpty(MatchName)){
+                    bdpic=newcameraurl;
+                    return true;
+                }else {
+                    boolean delete = RlsbUtil.delete(newcameraurl);
+                    //filepath-->图片绝对路径
+                    getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
+                    return false;
+                }
+
             }else {
-                boolean delete = RlsbUtil.delete(newcameraurl);
+                RlsbUtil.delete(newcameraurl);
                 //filepath-->图片绝对路径
                 getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
                 return false;
             }
-
         }else {
-            RlsbUtil.delete(newcameraurl);
-            //filepath-->图片绝对路径
-            getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
             return false;
         }
+
 
     }
 

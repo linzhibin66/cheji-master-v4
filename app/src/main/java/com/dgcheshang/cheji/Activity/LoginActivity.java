@@ -52,6 +52,7 @@ import com.dgcheshang.cheji.Activity.Lukao.LukaoActivity;
 import com.dgcheshang.cheji.Bean.VersionBean;
 import com.dgcheshang.cheji.CjApplication;
 import com.dgcheshang.cheji.R;
+import com.dgcheshang.cheji.Tools.FileUtil;
 import com.dgcheshang.cheji.Tools.Helper;
 import com.dgcheshang.cheji.Tools.LoadingDialogUtils;
 import com.dgcheshang.cheji.Tools.Speaking;
@@ -166,8 +167,8 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             if(msg.arg1==1) {//注销
                 handleCancel(msg);
             }else if(msg.arg1==2){
-                if(isCameraL==true||isCameraR==true){
-                    //摄像头正常
+                if((isCameraL==true&&NettyConf.camerastate==true)||(isCameraR==true&&NettyConf.camerastate==true)){
+                   //摄像头正常
                     Bundle data = msg.getData();
                     final String scms = data.getString("scms");
                     final String tdh = data.getString("tdh");
@@ -190,6 +191,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                                 releaseCameraL();
                                 mUSBMonitor.unregister();
                             }
+
                         },3000);
 
                     }else {
@@ -243,10 +245,13 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                         };
                         jstimer.schedule(task,1000,3000);
                     }
+
                 }else {
-                  //摄像头不正常
+                    //摄像头不正常
                     Speaking.in("摄像头异常");
+                    ZdUtil.ispz=false;
                 }
+
 
             }else if(msg.arg1==3){
 
@@ -277,7 +282,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
 
             }else if(msg.arg1==13){
                 //强制登出与指令拍照
-                if(isCameraL==true||isCameraR==true){
+                if((isCameraL==true&&NettyConf.camerastate==true)||(isCameraR==true&&NettyConf.camerastate==true)){
                     //摄像头正常
                     Bundle data = msg.getData();
                     final String scms = data.getString("scms");
@@ -301,6 +306,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                 }else {
                     //摄像头异常
                     Speaking.in("摄像头异常");
+                    ZdUtil.ispz=false;
                 }
             }
         }
@@ -701,7 +707,6 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
-
 
     /**
      * to access from CameraDialog
@@ -1138,6 +1143,7 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
 
             if(!NettyConf.camerastate) {
                 NettyConf.camerastate = true;
+                Log.e("TAG","摄像开启");
 //                Speaking.in("摄像头已开启");
                 //如果教练登录时间不是同一天则自动教练跟学员登出
                 if(isFirstStartApp==false){
@@ -1234,10 +1240,10 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
 
         @Override
         public void onDisconnect(final UsbDevice device, final USBMonitor.UsbControlBlock ctrlBlock) {
-            if (DEBUG) Log.i(TAG, "onDisconnect:" + device);
+//            if (DEBUG) Log.i(TAG, "onDisconnect:" + device);
 //            if(NettyConf.camerastate) {
 //                NettyConf.camerastate = false;
-//                Speaking.in("摄像头已断开");
+////                Speaking.in("摄像头已断开");
 //            }
 		/*	runOnUiThread(new Runnable() {
 				@Override
@@ -1261,6 +1267,8 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
                 });
 
             }
+            Log.e("TAG","摄像头断开");
+            NettyConf.camerastate=false;
 
         }
 
@@ -1347,39 +1355,35 @@ public class LoginActivity extends BaseInitActivity implements View.OnClickListe
         if (faceResult.size() > 0) {
             faceResult.clear();
         }
-        boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
-        Log.e("TAG","获取比对照片轮廓结果=" + ret);
-        if(ret==true&&faceResult!=null&&faceResult.size()>0){
-            String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
-            Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
+        Long filesize = FileUtil.fileLength(newcameraurl);
+        Log.e("TAG","拍照长度="+filesize);
+        if(filesize>10){
+            //有拍照照片
+            boolean ret = FaceDet.FD_FSDK_FaceDetection(newcameraurl, faceResult);
+            Log.e("TAG","获取比对照片轮廓结果=" + ret);
+            if(ret==true&&faceResult!=null&&faceResult.size()>0){
+                String MatchName = FaceDet.FaceDetectMuti(newcameraurl, NettyConf.thd);
+                Log.e("TAG","比对照片名字轮廓结果=" + MatchName);
 
-            if(StringUtils.isNotEmpty(MatchName)){
-                return true;
+                if(StringUtils.isNotEmpty(MatchName)){
+                    return true;
+                }else {
+                    boolean delete = RlsbUtil.delete(newcameraurl);
+                    //filepath-->图片绝对路径
+                    getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
+                    return false;
+                }
+
             }else {
-                boolean delete = RlsbUtil.delete(newcameraurl);
+                RlsbUtil.delete(newcameraurl);
                 //filepath-->图片绝对路径
                 getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
                 return false;
             }
-
-//            float score = FaceDet.FaceDetect(newcameraurl);
-//            int score1=(int)(score*100);
-//            Log.e("TAG","对比结果=" + score1);
-//            if(score1>=NettyConf.rlsb_jd){
-//                return true;
-//            }else {
-//                RlsbUtil.delete(newcameraurl);
-//                //filepath-->图片绝对路径
-//                getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
-//                return false;
-//            }
         }else {
-            RlsbUtil.delete(newcameraurl);
-            //filepath-->图片绝对路径
-            getContentResolver().delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, MediaStore.Images.Media.DATA + "=?", new String[]{newcameraurl});
+            //照片长度为0
             return false;
         }
-
     }
 
     /**

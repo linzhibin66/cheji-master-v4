@@ -20,6 +20,7 @@ import com.dgcheshang.cheji.Tools.IsMediaPlayer;
 public class LukaoListActivity extends BaseInitActivity implements View.OnClickListener{
     Context context=LukaoListActivity.this;
     CheckBox checkbox;
+    SharedPreferences.Editor coachedit;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +30,7 @@ public class LukaoListActivity extends BaseInitActivity implements View.OnClickL
 
     private void initView() {
         SharedPreferences coachsp = getSharedPreferences("coach", Context.MODE_PRIVATE); //私有数据
+        coachedit = coachsp.edit();
         boolean isshowdetail = coachsp.getBoolean("isshowdetail", false);
         Bundle extras = getIntent().getExtras();
         String title = extras.getString("title");
@@ -39,15 +41,26 @@ public class LukaoListActivity extends BaseInitActivity implements View.OnClickL
         View layout_back = findViewById(R.id.layout_back);
         checkbox = (CheckBox) findViewById(R.id.checkbox);//是否显示详情
         if(isshowdetail){
-            checkbox.isChecked();
+            checkbox.setChecked(true);
         }
+        checkbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(checkbox.isChecked()==true){
+                    coachedit.putBoolean("isshowdetail",true).commit();
+                }else {
+                    coachedit.putBoolean("isshowdetail",false).commit();
+
+                }
+            }
+        });
         RecyclerView recyclerview = (RecyclerView) findViewById(R.id.recyclerview);
         recyclerview.setLayoutManager(new GridLayoutManager(context,5));
         if(title.equals("灯光训练")){
-            LukaoAdapter lukaoAdapter = new LukaoAdapter(this,list,imagelist,"denguang",checkbox,coachsp);
+            LukaoAdapter lukaoAdapter = new LukaoAdapter(this,list,imagelist,"denguang",coachsp.getBoolean("isshowdetail", false));
             recyclerview.setAdapter(lukaoAdapter);
         }else if(title.equals("日常训练")){
-            LukaoAdapter lukaoAdapter = new LukaoAdapter(this,list,imagelist,"richang",checkbox,coachsp);
+            LukaoAdapter lukaoAdapter = new LukaoAdapter(this,list,imagelist,"richang",coachsp.getBoolean("isshowdetail", false));
             recyclerview.setAdapter(lukaoAdapter);
         }layout_back.setOnClickListener(this);
 

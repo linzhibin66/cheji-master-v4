@@ -132,7 +132,7 @@ public class StartExamActivity extends BaseInitActivity implements View.OnClickL
                     }
                     NettyConf.line=line;
                     NettyConf.xltimer = new Timer();
-                    LineTimerTask lineTask = new LineTimerTask(true);
+                    LineTimerTask lineTask = new LineTimerTask(true,context);
                     NettyConf.xltimer.schedule(lineTask,0,1000);
                 }else {
                     //结束考试
@@ -148,7 +148,6 @@ public class StartExamActivity extends BaseInitActivity implements View.OnClickL
                     startExamAdapter.notifyDataSetChanged();
                     finish();
                 }
-
 
                 break;
         }

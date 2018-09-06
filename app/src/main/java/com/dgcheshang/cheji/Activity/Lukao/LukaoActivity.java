@@ -42,10 +42,13 @@ import java.util.zip.ZipInputStream;
  * */
 public class LukaoActivity extends BaseInitActivity implements View.OnClickListener{
     Context context=LukaoActivity.this;
-    //名字数组
-    String[] lukaoname=new String[]{"夜间灯光操作一","夜间灯光操作二","夜间灯光操作三","夜间灯光操作四","夜间灯光操作五","夜间灯光操作六","夜间灯光操作七","夜间灯光操作八","夜间灯光操作九","夜间灯光操作十","夜间灯光操作十一","夜间灯光操作十二","上车准备","起步","变更车道","直线行驶","通过公交车站","通过学校区域","通过路口","通过人行横道","会车","超车","掉头","靠边停车","左转","右转","减速让行","禁止鸣笛","通过拱桥","通过急弯坡路","加减档","考试完成"};
-   //夜间灯光训练照片
-    int[] imageDenguang=new int[]{R.mipmap.lukao_light1,R.mipmap.lukao_light2,R.mipmap.lukao_light3,R.mipmap.lukao_light4,R.mipmap.lukao_light5,R.mipmap.lukao_light6,R.mipmap.lukao_light7,R.mipmap.lukao_light8,R.mipmap.lukao_light9,R.mipmap.lukao_light10,R.mipmap.lukao_light11,R.mipmap.lukao_light12};
+    //日常名字
+    String[] lukaoname=new String[]{"上车准备","起步","变更车道","直线行驶","通过公交车站","通过学校区域","通过路口","通过人行横道","会车","超车","掉头","靠边停车","左转","右转","减速让行","禁止鸣笛","通过拱桥","通过急弯坡路","加减档","考试完成"};
+    //灯光名字
+    String[] lightingname=new String[]{"夜间灯光操作一","夜间灯光操作二","夜间灯光操作三","夜间灯光操作四","夜间灯光操作五","单项练习"};
+
+    //夜间灯光训练照片
+    int[] imageDenguang=new int[]{R.mipmap.lukao_light1,R.mipmap.lukao_light2,R.mipmap.lukao_light3,R.mipmap.lukao_light4,R.mipmap.lukao_light5,R.mipmap.lukao_light6,R.mipmap.lukao_light7};
     //日常训练照片
     int[] imagerichang=new int[]{R.mipmap.lukao1,R.mipmap.lukao2,R.mipmap.lukao3,R.mipmap.lukao4,R.mipmap.lukao5,R.mipmap.lukao6,R.mipmap.lukao7,R.mipmap.lukao8,R.mipmap.lukao9,R.mipmap.lukao10,R.mipmap.lukao11,R.mipmap.lukao12,R.mipmap.lukao13,R.mipmap.lukao14,R.mipmap.lukao15,R.mipmap.lukao16,R.mipmap.lukao17,R.mipmap.lukao18,R.mipmap.lukao19,R.mipmap.lukao20};
     String file="/sdcard/chejidoal/";//创建的文件夹
@@ -89,16 +92,16 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
             tv_gps.setText("断开");
         }
         //文件不存在则下载文件
-        boolean b = fileIsExists(file);
-        if(b==false){
-            //判断网络是否正常
-            if(NettyConf.netstate){
-                //正常下载压缩文件
-                downFile(NetworkUrl.Chejimusic);
-            }else {
-                Toast.makeText(context,"暂无网络，无法下载语音文件",Toast.LENGTH_SHORT).show();
-            }
-        }
+//        boolean b = fileIsExists(file);
+//        if(b==false){
+//            //判断网络是否正常
+//            if(NettyConf.netstate){
+//                //正常下载压缩文件
+//                downFile(NetworkUrl.Chejimusic);
+//            }else {
+//                Toast.makeText(context,"暂无网络，无法下载语音文件",Toast.LENGTH_SHORT).show();
+//            }
+//        }
 
         //开启路考选项监听
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -163,7 +166,7 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
                 intent.setClass(context,LukaoListActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.putExtra("title","灯光训练");
-                intent.putExtra("list", lukaoname);
+                intent.putExtra("list", lightingname);
                 intent.putExtra("imagelist",imageDenguang);
                 startActivity(intent);
                 break;
@@ -367,22 +370,28 @@ public class LukaoActivity extends BaseInitActivity implements View.OnClickListe
         }
         NettyConf.line=line;
         NettyConf.xltimer = new Timer();
-        LineTimerTask lineTask = new LineTimerTask(false);
+        LineTimerTask lineTask = new LineTimerTask(false,context);
         NettyConf.xltimer.schedule(lineTask,0,1000);
     }
 
     /**
      * 返回键监听
      * */
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if(isback==true){
-                finish();
-            }
-            return false;
-        }else {
-            return super.onKeyDown(keyCode, event);
-        }
-    }
+//    public boolean onKeyDown(int keyCode, KeyEvent event) {
+//        if (keyCode == KeyEvent.KEYCODE_BACK) {
+//            if(isback==true){
+//                finish();
+//            }
+//            return false;
+//        }else {
+//            return super.onKeyDown(keyCode, event);
+//        }
+//    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //关闭页面停止播放
+        IsMediaPlayer.isRelease();
+    }
 }

@@ -150,11 +150,22 @@
             android:name=".Activity.Lukao.StartExamActivity"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateHidden|stateUnchanged" />
+        <!-- 有效学时 -->
         <activity
             android:name=".Activity.ValidTimeActivity"
             android:screenOrientation="landscape" />
-        <activity android:name=".Activity.LoginSmActivity" />
-        <activity android:name=".Activity.LoginPhoneActivity"></activity>
+        <!-- 扫码登录 -->
+        <activity
+            android:name=".Activity.LoginSmActivity"
+            android:screenOrientation="landscape" />
+        <!-- 手机号码登录 -->
+        <activity
+            android:name=".Activity.LoginPhoneActivity"
+            android:screenOrientation="landscape" />
+        <!-- 灯光练习页面 -->
+        <activity
+            android:name=".Activity.Lukao.LightingDetailActivity"
+            android:screenOrientation="landscape"/>
     </application>
 
 </manifest>

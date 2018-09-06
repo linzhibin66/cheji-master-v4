@@ -3,6 +3,7 @@ package com.dgcheshang.cheji.Adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.dgcheshang.cheji.Activity.Lukao.LightingDetailActivity;
 import com.dgcheshang.cheji.Activity.Lukao.LukaoListActivity;
 import com.dgcheshang.cheji.Activity.Lukao.LukaoListDetailActivity;
 import com.dgcheshang.cheji.Bean.LukaoBean;
@@ -31,17 +33,15 @@ public class LukaoAdapter extends RecyclerView.Adapter<LukaoAdapter.ViewHolder> 
     String[] list;
     int[] imagelist;
     String who;
-    CheckBox checkbox;
     boolean ischeckbox;
-    SharedPreferences coachsp;
+    int[] richanglist={R.raw.lukao13,R.raw.lukao14,R.raw.lukao15,R.raw.lukao16,R.raw.lukao17,R.raw.lukao18,R.raw.lukao19,R.raw.lukao20,R.raw.lukao21,R.raw.lukao22,R.raw.lukao23,R.raw.lukao24,R.raw.lukao25,R.raw.lukao26,R.raw.lukao27,R.raw.lukao28,R.raw.lukao29,R.raw.lukao30,R.raw.lukao31,R.raw.lukao32};
 
-    public LukaoAdapter(LukaoListActivity lukaoListActivity, String[] list, int[] image, String biaoji, CheckBox checkbox, SharedPreferences coachsp) {
+    public LukaoAdapter(LukaoListActivity lukaoListActivity, String[] list, int[] image, String biaoji, boolean ischeckbox) {
         this.mContent=lukaoListActivity;
         this.list=list;
         this.imagelist=image;
         this.who=biaoji;
-        this.checkbox=checkbox;
-        this.coachsp=coachsp;
+        this.ischeckbox=ischeckbox;
     }
 
     @Override
@@ -55,51 +55,53 @@ public class LukaoAdapter extends RecyclerView.Adapter<LukaoAdapter.ViewHolder> 
      * */
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        if(who.equals("denguang")){
-            holder.tv_list_name.setText(list[position]);
+        holder.tv_list_name.setText(list[position]);
+        if(who.equals("denguang")) {
+            holder.icon.setBackgroundResource(imagelist[0]);
         }else {
-            holder.tv_list_name.setText(list[position+12]);
+            holder.icon.setBackgroundResource(imagelist[position]);
         }
-        //选择框点击
-        checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                ischeckbox=isChecked;
-                SharedPreferences.Editor edit = coachsp.edit();
-                edit.putBoolean("isshowdetail",isChecked);
-                edit.commit();
-
-
-            }
-        });
-
-        holder.icon.setBackgroundResource(imagelist[position]);
         holder.layout_list.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(ischeckbox){
                     Intent intent = new Intent();
-                    intent.setClass(mContent, LukaoListDetailActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 //                intent.putExtra("position",position);
                     if(who.equals("denguang")){
+                        intent.setClass(mContent, LightingDetailActivity.class);
                         intent.putExtra("position",position);
                         intent.putExtra("title",list[position]);
                     }else {
-                        intent.putExtra("position",position+12);
-                        intent.putExtra("title",list[position+12]);
+                        intent.setClass(mContent, LukaoListDetailActivity.class);
+                        intent.putExtra("position",position);
+                        intent.putExtra("title",list[position]);
                     }
+
                     intent.putExtra("who",who);//richang,denguang
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     mContent.startActivity(intent);
                 }else {
-                    IsMediaPlayer.isRelease();
-                    String url="";
-                    if(who.equals("denguang")) {
-                        url="/mnt/sdcard/chejidoal/lukao"+(position+1)+ ".ogg";
+                    //日常才报读。灯光必须进入详情
+                    if(who.equals("richang")) {
+//                        IsMediaPlayer.isRelease();
+//                        String url="/mnt/sdcard/chejidoal/lukao"+(position+13)+ ".ogg";
+//                        IsMediaPlayer.isplay(url);
+
+                        IsMediaPlayer.isRelease();
+                        int i1 = richanglist[position];
+                        Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
+                        IsMediaPlayer.isplay1(mContent,setDataSourceuri);
                     }else {
-                        url="/mnt/sdcard/chejidoal/lukao"+(position+13)+ ".ogg";
+                        //
+                        Intent intent = new Intent();
+                        intent.setClass(mContent, LightingDetailActivity.class);
+                        intent.putExtra("position",position);
+                        intent.putExtra("title",list[position]);
+                        intent.putExtra("who",who);//richang,denguang
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        mContent.startActivity(intent);
                     }
-                    IsMediaPlayer.isplay(url);
+
                 }
 
             }
@@ -112,7 +114,7 @@ public class LukaoAdapter extends RecyclerView.Adapter<LukaoAdapter.ViewHolder> 
      * */
     @Override
     public int getItemCount() {
-        return imagelist.length;
+        return list.length;
 
     }
 

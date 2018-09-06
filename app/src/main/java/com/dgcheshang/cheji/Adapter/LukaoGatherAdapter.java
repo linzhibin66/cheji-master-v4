@@ -62,7 +62,7 @@ public class LukaoGatherAdapter extends RecyclerView.Adapter<LukaoGatherAdapter.
      * */
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        holder.tv_list_name.setText(lukaoname[position+12]);
+        holder.tv_list_name.setText(lukaoname[position]);
         holder.icon.setBackgroundResource(imagelist[position]);
         holder.layout_list.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,7 +104,7 @@ public class LukaoGatherAdapter extends RecyclerView.Adapter<LukaoGatherAdapter.
                         for (int i=0;i<arlist.size();i++){
                             LineBean bean = (LineBean) arlist.get(i);
                             int type = bean.getType();
-                            if(type==position+12){
+                            if(type==position){
                                 arlist.remove(i);
                                 return;
                             }
@@ -214,8 +214,8 @@ public class LukaoGatherAdapter extends RecyclerView.Adapter<LukaoGatherAdapter.
         soundPool.play(1, 1, 1, 0, 0, 1);//嘀声音
         state[position]=1;
         LineBean linebean = new LineBean();
-        linebean.setType(position+12);
-        linebean.setName(lukaoname[position+12]);
+        linebean.setType(position);
+        linebean.setName(lukaoname[position]);
         DecimalFormat df = new DecimalFormat(".0000000");
         String lat=String.valueOf(df.format(latitude));
         String lon=String.valueOf(df.format(longitude));

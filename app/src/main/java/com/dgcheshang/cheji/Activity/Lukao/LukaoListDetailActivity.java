@@ -2,6 +2,7 @@ package com.dgcheshang.cheji.Activity.Lukao;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -23,19 +24,7 @@ public class LukaoListDetailActivity extends BaseInitActivity implements View.On
     TextView tv_play_state,tv_title,tv_zhinan,tv_koufen;
     MediaPlayer mp;
     int isplay=0;//是否播放；0：未播放，1：播放中
-    String text1="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间与机动车会车；操作：开启近光灯。\n6.语音提示：夜间在道路上发生故障，妨碍交通又难以移动；操作：警示灯+小灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text2="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间通过拱桥、人行横道；操作：近光远光交替二次。\n5.语音提示：雾天行驶；操作：警示灯+雾灯。\n6.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text3="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间在窄路、窄桥与非机动车会车；操作：开启近光灯\n6.语音提示：雾天行驶;操作：警示灯+雾灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text4="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间与机动车会车；操作：开启近光灯。\n6.语音提示：夜间在道路上发生故障，妨碍交通又难以移动；操作：警示灯+小灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text5="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间通过坡路、拱桥；操作：近光远光交替二次。\n5.语音提示：雾天行驶；操作：警示灯+雾灯。\n6.模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text6="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间在窄路、与非机动车会车；操作：开启近光灯。\n6.语音提示：夜间在道路上发生故障，妨碍交通又难以移动;操作：警示灯+小灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text7="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间在窄桥、与非机动车会车；操作：开启近光灯。\n6.语音提示：夜间在道路上发生故障，妨碍交通又难以移动;操作：警示灯+小灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text8="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：请将前照灯变换成远光；操作：开启远光灯。\n5.语音提示：夜间与机动车会车；操作：开启近光灯。\n6.语音提示：夜间在道路上发生故障，妨碍交通又难以移动;操作：警示灯+小灯。\n7.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text9="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间超越前方车辆；操作：近光远光交替二次。\n5.语音提示：夜间在道路上发生故障，妨碍交通又难以移动；操作：警示灯+小灯。\n6.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text10="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间通过没有交通信号灯控制的路口；操作：近光远光交替二次。\n5.语音提示：雾天行驶；操作：警示灯+雾灯。\n6.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text11="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间通过急弯，拱桥；操作：近光远光交替二次。\n5.语音提示：雾天行驶；操作：警示灯+雾灯。\n6.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text12="1.语音提示：请开启前照灯；操作：将灯光开关打到大灯位置。\n2.语音提示：夜间在没有路灯照明不良条件下行驶；操作：开启远光灯。\n3.语音提示：夜间同方向近距离跟车行驶；操作：开启近光灯。\n4.语音提示：夜间通过急弯，坡路；操作：近光远光交替二次。\n5.语音提示：雾天行驶；操作：警示灯+雾灯。\n6.语音提示：模拟夜间考试完成，请关闭所有灯光；操作：关闭所有灯光。";
-    String text13="1.绕车一周检查车辆情况。\n2.注意贯彻车后方交通情况，在安全的情况下打开车门上车。\n3.上车后关好车门，调整座椅，调整后视镜，检查仪表盘，系好安全带。";
+     String text13="1.绕车一周检查车辆情况。\n2.注意贯彻车后方交通情况，在安全的情况下打开车门上车。\n3.上车后关好车门，调整座椅，调整后视镜，检查仪表盘，系好安全带。";
     String text14="1.确认操作杆在空挡的位置点火。（启动后，及时松开启动开关）\n2.踩离合。\n3.挂一档。\n4.打开左转向灯（等待3秒才能转向）。\n5.左右观察后方交通情况。\n6.慢抬离合器踏板，同时轻踩加速踏板。\n7.鸣笛，松手刹。\n注意：向前看，不能低头看；确保车辆起步平稳，不前冲，不抖动。（夜间应打开前照灯，在有路灯的情况下，禁止使用远光灯）。";
     String text15="1.打转向灯（等待3秒再转向）\n2.观察左后方交通状态，确认安全的情况下变更车道。\n注意：变更车道后，考生应主动寻找时机变回原来的车道；为确保安全，考试车只有在变更车道，超车，掉头时能占用左边车道，请他项目原则上应该在右车道完成。";
     String text16="1.直行行驶可增档加速，但不能跳档加速。\n2.不能用一档。\n3.车速保持在30Km/h左右。\n4.镇定心细，方向稳定，不左右摇摆。\n注意：如遇交通堵塞，需减速（不动方向），即使走便道都不要动方向，可减速甚至停下，鸣笛示意。";
@@ -56,7 +45,6 @@ public class LukaoListDetailActivity extends BaseInitActivity implements View.On
     String text31="1.听到语音提示“请完成加减档操作”，踩油门[转速1500转(15迈)时]→踩离合、松油门→换二档→松离合、踩油门[当转速1500或25迈时]→踩离合、松油门→换三档→快松离合(不踩油门)→[无需加油]踩离合→换四档→快松离合、踩离合→换三档→松离合→[把速度降到20迈]踩离合→换2档→慢松离合。\n注意：一般来说，20--30km/h挂二挡，30--40km/h挂三挡，40--50km/h挂四挡，50km/h以上挂五档。\n2.踩离合(器)，松油门：踩离合和松油门应同时(或几乎同时)进行，就算要排个先后次序，也应是踩离合在先，松油门在后。\n3.换挡：不可越级。怠速换档操作时切忌用力过猛，要仔细分清档位方向，以免挂错档位。\n4.抬离合、加油：要确保发动机转速和离合片转速同步。";
     String text32="1.通过指定地点完成本次模拟考试。\n2.拉手刹，置为空挡，松开制动踏板和离合。\n3.熄火，观察左后方，确认安全后下车。";
 
-    String koufen1="以下情况不合格\n1.不能正确使用灯光。\n2.同方向近距离跟车，使用远光灯。\n3.通过急弯、拱桥、人行横道、坡路、没有交通信号灯控制的路口，不交替使用远近光灯示意。\n4.不会按规定使用灯光。\n5.超车时，未变换使用远近灯光提醒被超车辆注意。\n6.路口转弯，使用远光灯。\n7.在有路灯的道路，使用远光灯。\n8.对低能见度道路判断情况差。\n9.未按指令操作。";
     String koufen13="以下情况不合格（-100分）\n1.不绕车一周检查车辆外观及安全情况。\n2.打开车门不观察后方交通情况。\n3.上车后不关闭车门。\n4.不系好安全带。\n以下情况扣除5分：\n1.不调整后视镜。\n2.不调整好座椅。";
     String koufen14="以下情况不合格：\n1.车门未关闭起步。\n2.起步前，未通过后视镜并向左方侧头\n3.起步时，车辆后溜距离大于30厘米。\n以下情况扣除20分：\n1.起步前不使用转向灯。\n2.起步时车辆后溜，但后溜距离小于30厘米。\n以下情况扣10分：\n1.启动发动机时，操作杆未置空挡。（或者P挡）\n2.发动机启动后，不及时松开启动开关。\n3.起步前，开转向灯小于3秒即转向。\n4.起步挂错档，不能及时纠正。\n5.不松驻车制动器起步。\n6.起步车辆发生闯动。\n7.因不正确操作导致车辆熄火。\n以下情况扣5分：\n1.启动发动机前，不调整座椅，后视镜，检查仪表盘。\n2.起步时，加速踏板控制不当，导致发动机转速过高。";
     String koufen15="以下情况不合格：\n1.变更车道前，不通过内外后视镜观察后方道路交通情况。\n2.变更车道时，判断车辆安全距离不合理，妨碍其他车辆行驶。\n3.连续变更两车道。\n4.在规定的时间与路程内，未按照语音指令变更车道。\n以下情况扣20分：\n1.变更车道不使用转向灯。\n以下情况扣除10分：\n1.变更车道前，开转向灯小于3秒即转向。";
@@ -78,8 +66,11 @@ public class LukaoListDetailActivity extends BaseInitActivity implements View.On
     String koufen31="以下情况不合格：\n1.未按指令平稳加、减挡。\n以下情况扣除10分：\n1.车辆运行速度和挡位不匹配。";
     String koufen32="以下情况不合格：\n1.未能通过指定地点完成本次模拟考试。\n2.停车，但未熄火，关闭所有车窗。";
 
-    String[] zhinan=new String[]{text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11,text12,text13,text14,text15,text16,text17,text18,text19,text20,text21,text22,text23,text24,text25,text26,text27,text28,text29,text30,text31,text32};
-    String[] koufen=new String[]{koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen1,koufen13,koufen14,koufen15,koufen16,koufen17,koufen18,koufen19,koufen20,koufen21,koufen22,koufen23,koufen24,koufen25,koufen26,koufen27,koufen28,koufen29,koufen30,koufen31,koufen32};
+    String[] zhinan=new String[]{text13,text14,text15,text16,text17,text18,text19,text20,text21,text22,text23,text24,text25,text26,text27,text28,text29,text30,text31,text32};
+    String[] koufen=new String[]{koufen13,koufen14,koufen15,koufen16,koufen17,koufen18,koufen19,koufen20,koufen21,koufen22,koufen23,koufen24,koufen25,koufen26,koufen27,koufen28,koufen29,koufen30,koufen31,koufen32};
+    int[] richanglist={R.raw.lukao13,R.raw.lukao14,R.raw.lukao15,R.raw.lukao16,R.raw.lukao17,R.raw.lukao18,R.raw.lukao19,R.raw.lukao20,R.raw.lukao21,R.raw.lukao22,R.raw.lukao23,R.raw.lukao24,R.raw.lukao25,R.raw.lukao26,R.raw.lukao27,R.raw.lukao28,R.raw.lukao29,R.raw.lukao30,R.raw.lukao31,R.raw.lukao32};
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,10 +90,13 @@ public class LukaoListDetailActivity extends BaseInitActivity implements View.On
         tv_koufen = (TextView) findViewById(R.id.tv_koufen);//扣分标准
         View layout_back = (View) findViewById(R.id.layout_back);//返回
         IsMediaPlayer.isRelease();
-        String url="/mnt/sdcard/chejidoal/lukao"+(position+1)+ ".ogg";//声音播放路径
+//        String url="/mnt/sdcard/chejidoal/lukao"+(position+1)+ ".ogg";//声音播放路径
+
+        int i1 = richanglist[position];
+        Uri url = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
         mp=new MediaPlayer();
         try {
-            mp.setDataSource(url);
+            mp.setDataSource(context,url);
             mp.prepare();
             mp.start();
         } catch (IOException e) {

@@ -192,7 +192,7 @@ public class LukaoExamAdapter extends RecyclerView.Adapter<LukaoExamAdapter.View
                         }
                         NettyConf.line=line;
                         NettyConf.xltimer = new Timer();
-                        LineTimerTask lineTask = new LineTimerTask(true);
+                        LineTimerTask lineTask = new LineTimerTask(true,mContent);
                         NettyConf.xltimer.schedule(lineTask,0,1000);
                         SharedPreferences.Editor edit = lukaosp.edit();
                         edit.putString("position",position+"");
