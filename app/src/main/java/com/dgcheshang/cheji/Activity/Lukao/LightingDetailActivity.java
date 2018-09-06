@@ -1,6 +1,5 @@
 package com.dgcheshang.cheji.Activity.Lukao;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,6 +49,7 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
     private boolean mShouldScroll;
 
     RecyclerView.LayoutManager manager;
+    Timer playtimer;
 
     List<LightingBean> list;
     Handler handler=new  Handler() {
@@ -121,7 +121,7 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
             manager = recyclerview.getLayoutManager();
             //只要不是单项练习，都连续报读
             if(position!=5){
-                final Timer playtimer = new Timer();
+                playtimer = new Timer();
                 TimerTask playtask = new TimerTask() {
                     @Override
                     public void run() {
@@ -217,6 +217,10 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(playtimer!=null){
+            playtimer.cancel();
+        }
+        IsMediaPlayer.stopvoice=true;
         //关闭页面停止播放
         IsMediaPlayer.isRelease();
     }

@@ -58,13 +58,16 @@ public class LukaoLightingAdapter extends RecyclerView.Adapter<LukaoLightingAdap
         holder.layout_list.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(whoposition==5){
                     IsMediaPlayer.isRelease();
-                holder.icon.setBackgroundResource(R.mipmap.lukao_light8);
+//                holder.icon.setBackgroundResource(R.mipmap.lukao_light8);
 //                    String url="";
 //                    url="/mnt/sdcard/chejidoal/lukao"+(position+1)+ ".ogg";
-                int i1 = voicelist[Integer.parseInt(list.get(position).getVoice())];
-                Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
-                IsMediaPlayer.isplay1(mContent,setDataSourceuri);
+                    int i1 = voicelist[Integer.parseInt(list.get(position).getVoice())];
+                    Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
+                    IsMediaPlayer.isplay1(mContent,setDataSourceuri);
+                }
+
 
             }
         });
