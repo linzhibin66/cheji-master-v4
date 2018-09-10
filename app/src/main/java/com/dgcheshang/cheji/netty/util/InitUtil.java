@@ -176,7 +176,7 @@ public class InitUtil {
         //应用参数设置
         SharedPreferences yycssp = CjApplication.getInstance().getSharedPreferences("yycs", Context.MODE_PRIVATE);
         String makephotojg=yycssp.getString("1","15");
-        NettyConf.makephotojg=Integer.parseInt("3")*60;//拍照发送间隔时间
+        NettyConf.makephotojg=Integer.parseInt("15")*60;//拍照发送间隔时间
         String cxyzsj=yycssp.getString("7","30");
         NettyConf.cxyzsj=Integer.parseInt(cxyzsj);
         NettyConf.dwfsjg3=Integer.valueOf(yycssp.getString("5","3600"));

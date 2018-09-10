@@ -67,12 +67,8 @@ public class LukaoLightingAdapter extends RecyclerView.Adapter<LukaoLightingAdap
                     Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
                     IsMediaPlayer.isplay1(mContent,setDataSourceuri);
                 }
-
-
             }
         });
-
-
 
     }
 

@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -50,22 +51,34 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
 
     RecyclerView.LayoutManager manager;
     Timer playtimer;
-
+    Timer lasttimer;
+    Timer gbtbtimer;
+    Timer bdtimer;
     List<LightingBean> list;
+    int position;
     Handler handler=new  Handler() {
         @Override
         public void handleMessage(Message msg) {
             if(msg.arg1==1){
-                //改变图标
-                int position=i-1;
-                View view = manager.findViewByPosition(position);
-                ImageView icon = (ImageView) view.findViewById(R.id.image_list_icon);
-                icon.setBackgroundResource(R.mipmap.lukao_light8);
-                if(position>0){
-                    View view2 = manager.findViewByPosition(position-1);
-                    ImageView icon2 = (ImageView) view2.findViewById(R.id.image_list_icon);
-                     icon2.setBackgroundResource(iconlist[Integer.parseInt(list.get(position-1).getIcon())]);
+                try {
+                    i++;
+                    //改变图标
+                    int position=i-1;
+                    Log.e("TAG","需要改变图标坐标="+position);
+                    View view = manager.findViewByPosition(position);
+                    ImageView icon = (ImageView) view.findViewById(R.id.image_list_icon);
+                    icon.setBackgroundResource(R.mipmap.lukao_light8);
+
+                    if(position>0){
+                        View view2 = manager.findViewByPosition(position-1);
+                        ImageView icon2 = (ImageView) view2.findViewById(R.id.image_list_icon);
+                        icon2.setBackgroundResource(iconlist[Integer.parseInt(list.get(position-1).getIcon())]);
+                    }
+
+                }catch (Exception e){
+                    Log.e("TAG","报读语音变换图标出错");
                 }
+
             } else if(msg.arg1==2){
                 //最后一行图标变回原来图标
                 int position=i-1;
@@ -90,7 +103,7 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
     private void initView() {
         Bundle extras = getIntent().getExtras();
         String title = extras.getString("title");
-        final int position = extras.getInt("position");
+        position = extras.getInt("position");
         String data="";
         if(position==0){
             data=lightlist0;
@@ -119,51 +132,101 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
             LukaoLightingAdapter lukaoAdapter = new LukaoLightingAdapter(this,list,iconlist,voicelist,position);
             recyclerview.setAdapter(lukaoAdapter);
             manager = recyclerview.getLayoutManager();
-            //只要不是单项练习，都连续报读
-            if(position!=5){
-                playtimer = new Timer();
-                TimerTask playtask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        if(IsMediaPlayer.stopvoice==true&&i<list.size()){
-                            IsMediaPlayer.stopvoice=false;
-                            IsMediaPlayer.isRelease();
-                            int i1 = voicelist[Integer.parseInt(list.get(i).getVoice())];
-                            Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
-                            IsMediaPlayer.isplay1(context,setDataSourceuri);
-                            if(i==list.size()-1){
-                                playtimer.cancel();
-                            }
-                            //设置自动跳动到播放那一行
-                            smoothMoveToPosition(recyclerview,i);
-                            //获取读取的那一行
-                            Message msg = new Message();
-                            msg.arg1=1;
-                            handler.sendMessage(msg);
-                            i++;
-                            //最后一个则变换图标
-                            if(i==list.size()){
-                                final Timer ystimer = new Timer();
-                                TimerTask ystask=new TimerTask() {
-                                    @Override
-                                    public void run() {
-                                        Message msg = new Message();
-                                        msg.arg1=2;
-                                        handler.sendMessage(msg);
-                                        ystimer.cancel();
-                                    }
-                                };
-                                ystimer.schedule(ystask,6000);
-                            }
-                        }
-                    }
-                };
-                playtimer.schedule(playtask,1000,2000);
 
-            }
 
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+       //只要不是单项练习，都连续报读
+        if(position!=5){
+            playtimer = new Timer();
+            TimerTask playtask = new TimerTask() {
+                @Override
+                public void run() {
+                    if(IsMediaPlayer.stopvoice==true&&i<list.size()){
+                        IsMediaPlayer.stopvoice=false;
+                        IsMediaPlayer.isRelease();
+                        int i1 = voicelist[Integer.parseInt(list.get(i).getVoice())];
+                        final Uri setDataSourceuri = Uri.parse("android.resource://com.dgcheshang.cheji/"+i1);
+                        //延时报读
+                        if(i==0){
+                            smoothMoveToPosition(recyclerview,i);
+                            //改变图标延时
+                            gbtbtimer = new Timer();
+                            TimerTask task=new TimerTask() {
+                                @Override
+                                public void run() {
+                                    //语音报读
+                                    IsMediaPlayer.isplay1(context,setDataSourceuri);
+                                    //发送更改图标
+                                    Message msg = new Message();
+                                    msg.arg1=1;
+                                    handler.sendMessage(msg);
+
+                                    gbtbtimer.cancel();
+                                }
+                            };
+                            gbtbtimer.schedule(task,100);
+
+                        }else {
+                            //报读延时
+                            bdtimer = new Timer();
+                            TimerTask bdtask=new TimerTask() {
+                                @Override
+                                public void run() {
+                                    Log.e("TAG","报读坐标="+i);
+                                    bdtimer.cancel();
+                                    smoothMoveToPosition(recyclerview,i-1);
+
+                                    //改变图标延时
+                                    gbtbtimer = new Timer();
+                                    TimerTask task=new TimerTask() {
+                                        @Override
+                                        public void run() {
+                                            //语音报读
+                                            IsMediaPlayer.isplay1(context,setDataSourceuri);
+                                            //发送改变图标
+                                            Message msg = new Message();
+                                            msg.arg1=1;
+                                            handler.sendMessage(msg);
+                                            gbtbtimer.cancel();
+                                        }
+                                    };
+                                    gbtbtimer.schedule(task,100);
+                                }
+                            };
+                            bdtimer.schedule(bdtask,3000);
+                        }
+
+                        //最后一个则变换图标
+                        if(i==list.size()-1){
+                            lasttimer = new Timer();
+                            TimerTask ystask=new TimerTask() {
+                                @Override
+                                public void run() {
+                                    lasttimer.cancel();
+                                    playtimer.cancel();
+                                    Message msg = new Message();
+                                    msg.arg1=2;
+                                    handler.sendMessage(msg);
+
+                                }
+                            };
+                            lasttimer.schedule(ystask,9000);
+                        }
+
+                    }
+                }
+            };
+            playtimer.schedule(playtask,100,500);
+
         }
 
     }
@@ -213,15 +276,29 @@ public class LightingDetailActivity extends BaseInitActivity implements View.OnC
         }
     }
 
-
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
+        if(bdtimer!=null){
+            bdtimer.cancel();
+        }
+        if(lasttimer!=null){
+            lasttimer.cancel();
+        }
+        if(gbtbtimer!=null){
+            gbtbtimer.cancel();
+        }
         if(playtimer!=null){
             playtimer.cancel();
         }
         IsMediaPlayer.stopvoice=true;
         //关闭页面停止播放
         IsMediaPlayer.isRelease();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 }
